@@ -97,4 +97,4 @@ cd webapp && VITE_CHAIN=sepolia npm run dev
 | `contracts/` | Smart contract `PitWallNFT.sol`, เทสต์ Hardhat, สคริปต์ deploy / steward / metadata ([รายละเอียด](contracts/README.md)) |
 | `webapp/` | เกม: Vite + React + TypeScript, ฉากแข่งวาดด้วย Canvas |
 | `webapp/src/chain/` | เชื่อม MetaMask และ contract ด้วย Ethers.js |
-| `BLOCKCHAIN_OVERVIEW.md` | สรุป flow ของ chain, NFT และระบบเกมทั้งหมด |
+| `OVERVIEW.md` | สรุประบบเกมทั้งหมด และ chain / NFT ทุกจุด |

@@ -84,23 +84,39 @@ export function Market() {
               {PARTS.filter((p) => p.slot === slot).map((p) => {
                 const owned = state.ownedParts.includes(p.id);
                 return (
-                  <div key={p.id} className={`card part-card kind-${p.kind} ${owned ? 'selected' : ''}`}>
-                    <PartImg p={p} size={56} />
-                    <div className="part-info">
-                      <strong className="name-with-perk">
-                        {p.name} <PerkIcon id={p.perk} />
-                      </strong>
-                      <span className="part-tags">
-                        <span className={`tag k-${p.kind}`}>{KIND_LABEL[p.kind]}</span>
-                        {p.variant && <span className="tag variant">{VARIANT_LABEL[p.variant]}</span>}
-                      </span>
-                      <span className="mini-stats">
-                        SPD {p.speed} · CRN {p.corner} · BRK {p.brake}
-                        {p.tire > 0 && ` · TIRE ${p.tire}`}
-                        {p.wet > 0 && ` · WET ${p.wet}`}
-                        {p.rel > 0 && ` · REL ${p.rel}`}
-                      </span>
+                  <div key={p.id} className={`card shop-part kind-${p.kind} ${owned ? 'selected' : ''}`}>
+                    <div className="sp-head">
+                      <PartImg p={p} size={48} />
+                      <div className="sp-title">
+                        <strong className="name-with-perk">
+                          {p.name} <PerkIcon id={p.perk} />
+                        </strong>
+                        <span className="part-tags">
+                          <span className={`tag k-${p.kind}`}>{KIND_LABEL[p.kind]}</span>
+                          {p.variant && <span className="tag variant">{VARIANT_LABEL[p.variant]}</span>}
+                        </span>
+                      </div>
                     </div>
+                    <dl className="sp-stats">
+                      {(
+                        [
+                          ['SPD', p.speed],
+                          ['CRN', p.corner],
+                          ['BRK', p.brake],
+                          ['TIRE', p.tire],
+                          ['WET', p.wet],
+                          ['REL', p.rel],
+                        ] as const
+                      )
+                        .filter(([k, v]) => v > 0 || k === 'SPD' || k === 'CRN' || k === 'BRK')
+                        .map(([k, v]) => (
+                          <div key={k} className={k === 'SPD' || k === 'CRN' || k === 'BRK' ? '' : 'trait'}>
+                            <dt>{k}</dt>
+                            <dd>{v}</dd>
+                          </div>
+                        ))}
+                    </dl>
+                    <div className="sp-foot">
                     {owned ? (
                       <span className="owned">Owned</span>
                     ) : (
@@ -124,6 +140,7 @@ export function Market() {
                         {pending === p.id ? 'Confirming…' : <><i className="coin" /> {priceLabel(p.price)}</>}
                       </Button>
                     )}
+                    </div>
                   </div>
                 );
               })}
