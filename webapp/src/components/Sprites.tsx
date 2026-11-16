@@ -8,7 +8,7 @@ export const DriverImg = ({ d, size = 128 }: { d: Driver; size?: number }) => (
 );
 
 export const PartImg = ({ p, size = 64 }: { p: Part; size?: number }) => (
-  <PixelImg src={asset('parts', p.id)} fallback={() => partSprite(p.slot, p.kind)} size={size} alt={p.name} />
+  <PixelImg src={asset('parts', p.id)} fallback={() => partSprite(p.slot, p.kind, p.variant)} size={size} alt={p.name} />
 );
 
 export const TireImg = ({ id, size = 48 }: { id: TireId; size?: number }) => (

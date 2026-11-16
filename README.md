@@ -48,7 +48,7 @@ npm run dev
 1. หน้า Home กด **Connect wallet** แล้วอนุญาตใน MetaMask จะมีขั้นให้กด **เพิ่มและสลับไป network "Hardhat Local"** ด้วย
 2. กด **+** ข้างยอดเหรียญ แล้วกด **+10 test ETH** เพื่อโอน ETH ทดสอบจาก node เข้าบัญชี MetaMask ของคุณ ไม่ต้อง import private key (ยอด ETH แสดงเฉพาะในหน้าต่างเติมเหรียญนี้)
 3. แลกเหรียญ: กด **+** → เลือกจำนวน → **Exchange** (1 เหรียญ = 0.00001 ETH) นักแข่ง 1 คน + ชิ้นส่วน 4 ชิ้นใช้ประมาณ 700–800 เหรียญ
-4. ไปหน้า **Market** ซื้อนักแข่งและชิ้นส่วนด้วยเหรียญ (ชิ้นส่วนมี 5 สาย: Speed, Corner, Brake, Endurance, Rain)
+4. ไปหน้า **Market** ซื้อนักแข่งและชิ้นส่วนด้วยเหรียญ (ชิ้นส่วนมี 3 type: Speed, Corner, Brake และบาง type มีเวอร์ชัน Endurance หรือ Rain)
 5. **Garage** จัดรถ เลือกยาง วางแผนพิท → **Race** → **Results**
 6. ที่ Results กด **Post result** เพื่อส่งคะแนนขึ้น chain
 

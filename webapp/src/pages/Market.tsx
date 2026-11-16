@@ -8,7 +8,8 @@ import { shortAddress } from '../shared/plan';
 import type { TireId } from '../shared/types';
 import { useGame } from '../useGame';
 
-const KIND_LABEL = { speed: 'Speed', corner: 'Corner', brake: 'Brake', endurance: 'Endurance', rain: 'Rain' } as const;
+const KIND_LABEL = { speed: 'Speed', corner: 'Corner', brake: 'Brake' } as const;
+const VARIANT_LABEL = { endurance: 'Endurance', rain: 'Rain' } as const;
 
 export function Market() {
   const { state, service, attempt, notify, go, demo } = useGame();
@@ -89,7 +90,10 @@ export function Market() {
                       <strong className="name-with-perk">
                         {p.name} <PerkIcon id={p.perk} />
                       </strong>
-                      <span className={`tag k-${p.kind}`}>{KIND_LABEL[p.kind]}</span>
+                      <span className="part-tags">
+                        <span className={`tag k-${p.kind}`}>{KIND_LABEL[p.kind]}</span>
+                        {p.variant && <span className="tag variant">{VARIANT_LABEL[p.variant]}</span>}
+                      </span>
                       <span className="mini-stats">
                         SPD {p.speed} · CRN {p.corner} · BRK {p.brake}
                         {p.tire > 0 && ` · TIRE ${p.tire}`}

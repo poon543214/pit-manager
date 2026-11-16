@@ -76,7 +76,7 @@ function candidatePlans(laps: number): Pick<Entrant, 'tire' | 'stops'>[] {
 type Style = 'aggressive' | 'saver' | 'gambler' | 'balanced';
 const STYLES: Record<string, Style> = {
   charles: 'aggressive', kimi: 'saver', max: 'balanced', oscar: 'saver', fernando: 'gambler',
-  rafa: 'aggressive', mila: 'saver', jonah: 'gambler',
+  lewis: 'gambler', george: 'saver', lando: 'aggressive',
   nova: 'balanced', theo: 'aggressive', aiko: 'saver', leo: 'aggressive', sana: 'gambler', finn: 'balanced',
 };
 /** perStop: seconds a team pretends a stop costs or saves; perLap: per-lap liking (negative) or dislike of a compound; hunch: noise. */

@@ -47,7 +47,7 @@
 
 ### Catalog (ตั้งใน constructor)
 
-**นักแข่ง 8 แบบ** (ค่าสถิติรวม 20 แต้มเท่ากันทุกคน)
+**นักแข่ง 8 แบบ** (ค่าสถิติรวม 20 แต้มเท่ากันทุกคน ชื่อล้อนักแข่ง F1 จริง ชุดใช้สีทีมจริง)
 
 | key | ชื่อ | Pace | Consistency | Wet | ราคา (coin) | เทียบเป็น ETH | Perk |
 |---|---|---|---|---|---|---|---|
@@ -56,19 +56,24 @@
 | `max` | Max Verstappood | 7 | 8 | 5 | 260 | 0.0026 | pit-lane-pro |
 | `oscar` | Oscar Pasta | 6 | 9 | 5 | 240 | 0.0024 | closer |
 | `fernando` | Fernando Aloson | 5 | 6 | 9 | 220 | 0.0022 | rain-dancer |
-| `rafa` | Rafa Quintero | 8 | 7 | 5 | 270 | 0.0027 | late-braker |
-| `mila` | Mila Novak | 6 | 7 | 7 | 230 | 0.0023 | iron-man |
-| `jonah` | Jonah Pike | 7 | 6 | 7 | 250 | 0.0025 | undercut |
+| `lewis` | Lewis Hamiltoon | 7 | 6 | 7 | 270 | 0.0027 | late-braker |
+| `george` | George Rustle | 7 | 7 | 6 | 250 | 0.0025 | iron-man |
+| `lando` | Lando Norrish | 8 | 6 | 6 | 260 | 0.0026 | undercut |
 
-**ชิ้นส่วน 20 แบบ** = 4 ช่อง × 5 สาย บน chain เก็บ Speed/Corner/Brake ส่วน trait (Tire care, Wet grip, Reliability) และ perk อยู่ใน JSON ของเกม ผูกด้วย key
+**ชิ้นส่วน 18 แบบ** = 4 ช่อง × 3 type (Speed, Corner, Brake) และบาง type มีเวอร์ชันพิเศษเพิ่ม บน chain เก็บ Speed/Corner/Brake ส่วน trait (Tire care, Wet grip, Reliability) และ perk อยู่ใน JSON ของเกม ผูกด้วย key
 
-| สาย (kind) | Speed | Corner | Brake | Tire care | Wet grip | Reliability | ราคา (coin) | เหมาะกับ |
-|---|---|---|---|---|---|---|---|---|
-| Speed | 3 | 1 | 1 | 0 | 0 | 0 | 120 | สนาม Speed |
-| Corner | 1 | 3 | 1 | 0 | 0 | 0 | 120 | สนาม Corner |
-| Brake | 1 | 1 | 3 | 0 | 0 | 0 | 120 | สนาม Brake |
-| Endurance | 2/1/1 ต่างกันตามช่อง (รวม 4) | | | 3 | 0 | 2 | 130 | สนามกินยาง, ลดจำนวนพิท, ประหยัดค่าซ่อม |
-| Rain | 1 | 2 | 1 | 0 | 3 | 1 | 130 | วันที่ฝนตก (เดิมพันกับพยากรณ์) |
+| ชิ้นส่วน | Type | เวอร์ชัน | SPD/CRN/BRK | Tire care | Wet grip | Reliability | ราคา (coin) |
+|---|---|---|---|---|---|---|---|
+| ทุกช่อง | Speed / Corner / Brake | ปกติ | 3/1/1, 1/3/1, 1/1/3 | 0 | 0 | 0 | 120 |
+| Endurance V6 (engine) | Speed | Endurance | 2/1/1 | 3 | 0 | 2 | 130 |
+| Durable wing (aero) | Corner | Endurance | 1/2/1 | 3 | 0 | 2 | 130 |
+| Kerb-proof (suspension) | Corner | Endurance | 1/2/1 | 3 | 0 | 2 | 130 |
+| Rain-map V6 (engine) | Corner | Rain | 1/2/1 | 0 | 3 | 1 | 130 |
+| Rain wing (aero) | Corner | Rain | 1/2/1 | 0 | 3 | 1 | 130 |
+| Smooth-shift box (gearbox) | Brake | Rain | 1/1/2 | 0 | 3 | 1 | 130 |
+
+- เวอร์ชัน Endurance: แลกค่าหลักบางส่วนเพื่อให้ยางสึกช้าและพลาดน้อยลง ชนะที่สนามกินยาง
+- เวอร์ชัน Rain: แลกค่าหลักเพื่อ Wet grip ชนะตอนฝน แต่เสียเปรียบวันแห้ง
 
 ช่อง: `engine`, `aero`, `gearbox`, `suspension`
 
@@ -251,11 +256,11 @@ steward ──► endSeason() ──► claimable[top1..3] = 50 / 30 / 20 % ข�
 
 - **Car fit:** ค่าชิ้นส่วนที่ตรงกับน้ำหนักของสนามทำให้รถเร็วขึ้น
 - **Trait ของชิ้นส่วน:** Tire care (แต้มละ ยางสึกช้าลง 5% สูงสุด 40%), Wet grip (แต้มละ 0.12s/รอบตอนฝน), Reliability (แต้มละ พลาดน้อยลง 5% และชิ้นส่วนสึกช้าลง 6%)
-- **Perk:** นักแข่งและชิ้นส่วนมี perk ที่ทำงานเฉพาะสถานการณ์: ออกตัว, 2 รอบสุดท้าย, ฝน, แห้ง, ประเภทสนาม (Late Braker), ยางใหม่/ยางเก่า (Undercut, Long Run), พิท, ความล้า (Iron Man, Cool Box), การสึกของชิ้นส่วน (Long Life, Kerb Proof)
+- **Perk:** นักแข่งและชิ้นส่วนมี perk ที่ทำงานเฉพาะสถานการณ์: ออกตัว, 2 รอบสุดท้าย, ฝน, แห้ง, ประเภทสนาม (Late Braker), ยางใหม่/ยางเก่า (Undercut, Long Run), พิท, ความล้า (Iron Man), การสึกของชิ้นส่วน (Long Life, Kerb Proof)
 - **ความทน:** ชิ้นส่วนที่ใส่อยู่เสีย 12% ต่อเรซ (ฝนเพิ่ม 4%) ลดลงได้ด้วย Reliability และ perk ประสิทธิภาพลดลงจนกว่าจะซ่อม
-- **กราฟ Build 6 เหลี่ยม (Garage):** รวมนักแข่ง + ชิ้นส่วน + perk เป็น 6 แกน 0–10: Speed, Cornering, Braking, Tire care, Wet, Consistency
+- **กราฟ Build 6 เหลี่ยม (Garage):** รวมนักแข่ง + ชิ้นส่วน + perk เป็นความสามารถในเรซ 6 แกน 0–10: Top speed (สปีดปลาย), Launch (ออกตัว/รอบหลังพิท), Cornering (เข้าโค้ง), Braking (เบรก), Long run (รักษาความเร็วทั้ง stint: ยาง, ความล้า, ความนิ่ง), Wet (ฝน)
 - **ค่าซ่อม:** 50% ของราคาชิ้นส่วนต่อ 100% ที่ซ่อมคืน
-- **Balance:** ไม่มีแผนยางหรือชุดชิ้นส่วนที่ชนะทุกสนาม: Endurance ชนะที่สนามกินยาง, Rain ชนะตอนฝน, ชุดตรงสนามชนะวันแห้ง (Vitest ตรวจ)
+- **Balance:** ไม่มีแผนยางหรือชุดชิ้นส่วนที่ชนะทุกสนาม: เวอร์ชัน Endurance ชนะที่สนามกินยาง, Rain ชนะตอนฝน, ชิ้นส่วนปกติตรงสนามชนะวันแห้ง (Vitest ตรวจ)
 
 ### 5.6 เศรษฐกิจในเกม (coin)
 

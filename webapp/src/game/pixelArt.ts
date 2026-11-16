@@ -3,7 +3,7 @@
  * generated PNGs land in public/assets/ — then the <img> wins automatically.
  */
 import { COLORS } from '../shared/constants';
-import type { PartKind, Slot, TireId } from '../shared/types';
+import type { PartKind, PartVariant, Slot, TireId } from '../shared/types';
 
 const { red, white, black, grey } = COLORS;
 
@@ -184,13 +184,15 @@ export function driverSprite(id: string, look: { skin: string; hair: string; hai
   });
 }
 
-const ACCENT: Record<PartKind, string> = { speed: red, corner: white, brake: black, endurance: grey, rain: white };
+const ACCENT: Record<PartKind, string> = { speed: red, corner: white, brake: black };
+/** A variant swaps the accent so it reads apart from the plain part of its type. */
+const VARIANT_ACCENT: Record<PartVariant, string> = { endurance: grey, rain: white };
 
-export function partSprite(slot: Slot, kind: PartKind): string {
-  return memo(`part:${slot}:${kind}`, () => {
+export function partSprite(slot: Slot, kind: PartKind, variant?: PartVariant): string {
+  return memo(`part:${slot}:${kind}:${variant ?? ''}`, () => {
     const [c, ctx] = canvas(32, 32);
-    const a = ACCENT[kind];
-    const body = kind === 'brake' ? grey : black;
+    const a = variant ? VARIANT_ACCENT[variant] : ACCENT[kind];
+    const body = variant === 'rain' ? grey : kind === 'brake' ? grey : black;
     if (slot === 'engine') {
       box(ctx, 6, 11, 20, 13, body);
       for (let i = 0; i < 3; i++) box(ctx, 8 + i * 6, 6, 4, 4, a);

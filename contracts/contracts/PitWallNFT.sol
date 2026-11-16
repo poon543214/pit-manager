@@ -54,7 +54,7 @@ contract PitWallNFT is ERC721Enumerable {
     /// Exchange rate: 1 game coin = 0.00001 ETH (1,000 coins = 0.01 ETH).
     uint256 public constant COIN = 0.00001 ether;
     uint8 public constant DRIVER_TYPES = 8;
-    uint8 public constant PART_TYPES = 20;
+    uint8 public constant PART_TYPES = 18;
 
     DriverType[] private _driverTypes;
     PartType[] private _partTypes;
@@ -113,32 +113,30 @@ contract PitWallNFT is ERC721Enumerable {
         _addDriver("max", 7, 8, 5, 260);
         _addDriver("oscar", 6, 9, 5, 240);
         _addDriver("fernando", 5, 6, 9, 220);
-        _addDriver("rafa", 8, 7, 5, 270);
-        _addDriver("mila", 6, 7, 7, 230);
-        _addDriver("jonah", 7, 6, 7, 250);
+        _addDriver("lewis", 7, 6, 7, 270);
+        _addDriver("george", 7, 7, 6, 250);
+        _addDriver("lando", 8, 6, 6, 260);
 
-        // per slot: speed, corner and brake specialists, an endurance part and a rain part.
+        // per slot: a speed, a corner and a brake part; some types also come in an endurance or rain version.
         // Tire care, reliability and wet grip live in the game's JSON with the perk, linked by key.
         _addPart("engine_speed", Slot.Engine, 3, 1, 1, 120);
-        _addPart("engine_corner", Slot.Engine, 1, 3, 1, 120);
-        _addPart("engine_brake", Slot.Engine, 1, 1, 3, 120);
         _addPart("engine_endurance", Slot.Engine, 2, 1, 1, 130);
+        _addPart("engine_corner", Slot.Engine, 1, 3, 1, 120);
         _addPart("engine_rain", Slot.Engine, 1, 2, 1, 130);
+        _addPart("engine_brake", Slot.Engine, 1, 1, 3, 120);
         _addPart("aero_speed", Slot.Aero, 3, 1, 1, 120);
         _addPart("aero_corner", Slot.Aero, 1, 3, 1, 120);
-        _addPart("aero_brake", Slot.Aero, 1, 1, 3, 120);
         _addPart("aero_endurance", Slot.Aero, 1, 2, 1, 130);
         _addPart("aero_rain", Slot.Aero, 1, 2, 1, 130);
+        _addPart("aero_brake", Slot.Aero, 1, 1, 3, 120);
         _addPart("gearbox_speed", Slot.Gearbox, 3, 1, 1, 120);
         _addPart("gearbox_corner", Slot.Gearbox, 1, 3, 1, 120);
         _addPart("gearbox_brake", Slot.Gearbox, 1, 1, 3, 120);
-        _addPart("gearbox_endurance", Slot.Gearbox, 1, 1, 2, 130);
-        _addPart("gearbox_rain", Slot.Gearbox, 1, 2, 1, 130);
+        _addPart("gearbox_rain", Slot.Gearbox, 1, 1, 2, 130);
         _addPart("suspension_speed", Slot.Suspension, 3, 1, 1, 120);
         _addPart("suspension_corner", Slot.Suspension, 1, 3, 1, 120);
-        _addPart("suspension_brake", Slot.Suspension, 1, 1, 3, 120);
         _addPart("suspension_endurance", Slot.Suspension, 1, 2, 1, 130);
-        _addPart("suspension_rain", Slot.Suspension, 1, 2, 1, 130);
+        _addPart("suspension_brake", Slot.Suspension, 1, 1, 3, 120);
     }
 
     function _addPart(string memory key, Slot slot, uint8 speed, uint8 corner, uint8 brake, uint256 price) private {

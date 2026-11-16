@@ -41,7 +41,7 @@ straight from the node. No private key is imported anywhere.
 
 ## NFTs
 
-- Catalog: 8 drivers and 20 parts (4 slots × speed, corner, brake, endurance, rain). Tire care, wet grip, reliability and perks live in the game's JSON, linked by key.
+- Catalog: 8 drivers and 18 parts (4 slots × speed, corner, brake, plus endurance and rain versions of some). Tire care, wet grip, reliability and perks live in the game's JSON, linked by key.
 - `inventoryOf(address)`: every token a wallet holds with its stats (what the game reads)
 - `setBaseURI` / `withdraw` / `voidRace` / `endSeason`: owner only. `tokenURI(id)` = baseURI + key + `.json`
 

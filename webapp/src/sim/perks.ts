@@ -74,7 +74,6 @@ const list: Perk[] = [
   { id: 'push-mode', name: 'Push Mode', theme: 'finish', text: 'Last two laps 1.2s faster each.', effects: [{ on: 'final2', s: 1.2 }] },
   { id: 'out-lap', name: 'Out-lap Launch', theme: 'pit', text: 'Lap after a pit stop 1.2s faster.', effects: [{ on: 'outlap', s: 1.2 }] },
   { id: 'wet-brake', name: 'Wet Brake', theme: 'rain', text: 'Wet laps 0.12s faster.', effects: [{ on: 'wet', s: 0.12 }] },
-  { id: 'cool-box', name: 'Cool Box', theme: 'steady', text: 'Driver tires out 20% less in a race.', effects: [{ on: 'fatigue', mult: 0.8 }] },
   { id: 'soft-shift', name: 'Soft Shift', theme: 'rain', text: 'Rain never rattles the driver.', effects: [{ on: 'wetCalm' }] },
   // suspension
   { id: 'fresh-rubber', name: 'Fresh Rubber', theme: 'pit', text: '0.3s faster on tires up to two laps old.', effects: [{ on: 'fresh', s: 0.3 }] },
@@ -87,7 +86,6 @@ const list: Perk[] = [
     text: 'Fitted parts wear 30% slower, and lap times scatter 10% less.',
     effects: [{ on: 'partWear', mult: 0.7 }, { on: 'scatter', mult: 0.9 }],
   },
-  { id: 'rain-damper', name: 'Rain Damper', theme: 'rain', text: 'Wet laps 0.15s faster.', effects: [{ on: 'wet', s: 0.15 }] },
 ];
 
 export const PERKS: Record<string, Perk> = Object.fromEntries(list.map((p) => [p.id, p]));

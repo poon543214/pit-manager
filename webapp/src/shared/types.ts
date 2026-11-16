@@ -2,8 +2,10 @@ import type { ChainSeason } from '../chain/season';
 export type Slot = 'engine' | 'aero' | 'gearbox' | 'suspension';
 /** The three handling stats a track weighs. */
 export type StatKind = 'speed' | 'corner' | 'brake';
-/** Part families: one per handling stat, plus endurance (tire care, reliability) and rain (wet grip). */
-export type PartKind = StatKind | 'endurance' | 'rain';
+/** A part's type: the handling stat it is built around. */
+export type PartKind = StatKind;
+/** Some types come in more than one version: endurance (tire care, reliability) or rain (wet grip). */
+export type PartVariant = 'endurance' | 'rain';
 export type TireId = 'soft' | 'medium' | 'hard';
 export type Weather = 'dry' | 'wet';
 
@@ -32,6 +34,8 @@ export interface Part {
   id: string;
   slot: Slot;
   kind: PartKind;
+  /** a second version of its type, trading some stat for a trait */
+  variant?: PartVariant;
   name: string;
   speed: number;
   corner: number;

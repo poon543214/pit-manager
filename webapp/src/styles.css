@@ -141,8 +141,6 @@ img.pixel { image-rendering: pixelated; display: block; }
 .k-speed { color: var(--white); background: var(--red); padding: 0 3px; }
 .k-corner { color: var(--black); background: var(--white); padding: 0 3px; outline: 1px solid var(--black); }
 .k-brake { color: var(--white); background: var(--black); padding: 0 3px; }
-.k-endurance { color: var(--black); background: var(--grey); padding: 0 3px; }
-.k-rain { color: var(--white); background: var(--black); padding: 0 3px; outline: 1px dashed var(--white); }
 
 .tag { font-family: var(--pixel); font-size: 8px; padding: 3px 5px; width: fit-content; }
 .tag.k-corner { outline: 0; }
@@ -551,8 +549,6 @@ img.pixel { image-rendering: pixelated; display: block; }
 .cb-kind.k-speed { background: var(--red); }
 .cb-kind.k-corner { background: var(--white); outline: 0; padding: 0; }
 .cb-kind.k-brake { background: var(--black); padding: 0; }
-.cb-kind.k-endurance { background: var(--grey); padding: 0; }
-.cb-kind.k-rain { background: var(--black); padding: 0; outline: 1px dashed var(--white); }
 .cb-pop { position: absolute; z-index: 3; width: 250px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
 .cb-opt {
   display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px;
@@ -807,3 +803,6 @@ button:disabled.driver-row, button:disabled.chip, .cb-callout:disabled { opacity
 .br-label text { font-family: var(--pixel); font-size: 9px; fill: var(--white); }
 .br-label .br-value { font-family: var(--text); font-size: 12px; font-weight: 700; fill: #ccc; }
 .build-note { margin: 0; font-size: 12px; text-align: center; }
+
+.part-tags { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.tag.variant { color: var(--white); background: transparent; outline: 1px dashed rgba(255,255,255,.7); padding: 0 3px; }

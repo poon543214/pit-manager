@@ -92,31 +92,27 @@ describe('balance', () => {
     expect(dominant).toEqual([]);
   });
 
-  it('every part family is in the best build somewhere, and no family is best everywhere', () => {
-    // builds: all four parts of the track's own kind, or one or two slots swapped to endurance, or a full rain set
-    const pick = (slot: string, kind: string) => PARTS.find((p) => p.slot === slot && p.kind === kind)!.id;
-    const masks = [1, 2, 4, 8, 3, 5, 6, 9, 10, 12];
+  it('every part version wins somewhere: endurance on tire-hungry tracks, rain in the wet, plain parts on dry days', () => {
+    // builds: four plain parts of the track's own type, then that build with endurance or rain versions swapped in
+    const plain = (track: Track, slot: string) => PARTS.find((p) => p.slot === slot && p.kind === track.focus && !p.variant)!.id;
+    const versions = (variant: string) => PARTS.filter((p) => p.variant === variant);
+    const subsets = <T,>(xs: T[]) => xs.flatMap((_, i) => xs.slice(i).map((_, k) => xs.slice(i, i + k + 1)));
     const coarse = (laps: number) => plans(laps).filter((p) => p.stops.every((s) => s.lap % 2 === 0));
     const winners = new Set<string>();
     for (const track of TRACKS) {
       for (const weather of ['dry', 'wet'] as Weather[]) {
-        const builds: [string, Loadout['parts']][] = [
-          [track.focus, Object.fromEntries(SLOTS.map((s) => [s, pick(s, track.focus)]))],
-          ['rain', Object.fromEntries(SLOTS.map((s) => [s, pick(s, 'rain')]))],
-          ...masks.map((m): [string, Loadout['parts']] => [
-            'endurance',
-            Object.fromEntries(SLOTS.map((s, i) => [s, pick(s, m & (1 << i) ? 'endurance' : track.focus)])),
-          ]),
-        ];
+        const base = Object.fromEntries(SLOTS.map((s) => [s, plain(track, s)])) as Loadout['parts'];
+        const builds: [string, Loadout['parts']][] = [['plain', base]];
+        for (const variant of ['endurance', 'rain'])
+          for (const set of subsets(versions(variant))) builds.push([variant, { ...base, ...Object.fromEntries(set.map((p) => [p.slot, p.id])) }]);
         const timed = builds.map(([family, parts]) => {
-          const base = { ...entrant(2, { tire: 'medium', stops: [] }, true), stats: carStats(parts) };
-          return { family, t: Math.min(...coarse(track.laps).map((p) => projectedTotal({ ...base, ...p }, track, weather))) };
+          const e = { ...entrant(2, { tire: 'medium', stops: [] }, true), stats: carStats(parts) };
+          return { family, t: Math.min(...coarse(track.laps).map((p) => projectedTotal({ ...e, ...p }, track, weather))) };
         });
         winners.add(timed.reduce((a, b) => (b.t < a.t ? b : a)).family);
       }
     }
-    expect([...winners].sort()).toEqual(expect.arrayContaining(['endurance', 'rain']));
-    expect(winners.size).toBeGreaterThanOrEqual(3);
+    expect([...winners].sort()).toEqual(['endurance', 'plain', 'rain']);
   });
 });
 

@@ -44,7 +44,7 @@ for (const pt of parts) {
   const p = perk(pt.perk);
   write(pt.id, {
     name: pt.name,
-    description: `Pit Manager ${pt.slot} (${pt.kind} build). Skill: ${p.name}. ${p.text}`,
+    description: `Pit Manager ${pt.slot} (${pt.kind}${pt.variant ? `, ${pt.variant} version` : ''}). Skill: ${p.name}. ${p.text}`,
     attributes: [
       { trait_type: 'Type', value: 'Part' },
       { trait_type: 'Slot', value: cap(pt.slot) },
@@ -52,6 +52,10 @@ for (const pt of parts) {
       { trait_type: 'Speed', value: pt.speed },
       { trait_type: 'Corner', value: pt.corner },
       { trait_type: 'Brake', value: pt.brake },
+      ...(pt.variant ? [{ trait_type: 'Version', value: cap(pt.variant) }] : []),
+      ...(pt.tire ? [{ trait_type: 'Tire care', value: pt.tire }] : []),
+      ...(pt.wet ? [{ trait_type: 'Wet grip', value: pt.wet }] : []),
+      ...(pt.rel ? [{ trait_type: 'Reliability', value: pt.rel }] : []),
       { trait_type: 'Skill', value: p.name },
     ],
   });
