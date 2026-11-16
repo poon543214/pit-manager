@@ -1,0 +1,122 @@
+[
+  {
+    "id": "engine_speed", "perk": "overboost",
+    "slot": "engine",
+    "kind": "speed",
+    "name": "Sprint V6",
+    "speed": 3,
+    "corner": 1,
+    "brake": 1,
+    "price": 120
+  },
+  {
+    "id": "engine_corner", "perk": "smooth-torque",
+    "slot": "engine",
+    "kind": "corner",
+    "name": "Torque V6",
+    "speed": 1,
+    "corner": 3,
+    "brake": 1,
+    "price": 120
+  },
+  {
+    "id": "engine_brake", "perk": "safe-map",
+    "slot": "engine",
+    "kind": "brake",
+    "name": "Safe-map V6",
+    "speed": 1,
+    "corner": 1,
+    "brake": 3,
+    "price": 120
+  },
+  {
+    "id": "aero_speed", "perk": "slipstream",
+    "slot": "aero",
+    "kind": "speed",
+    "name": "Low-drag wing",
+    "speed": 3,
+    "corner": 1,
+    "brake": 1,
+    "price": 120
+  },
+  {
+    "id": "aero_corner", "perk": "tyre-saver",
+    "slot": "aero",
+    "kind": "corner",
+    "name": "Downforce wing",
+    "speed": 1,
+    "corner": 3,
+    "brake": 1,
+    "price": 120
+  },
+  {
+    "id": "aero_brake", "perk": "stable-rear",
+    "slot": "aero",
+    "kind": "brake",
+    "name": "Airbrake wing",
+    "speed": 1,
+    "corner": 1,
+    "brake": 3,
+    "price": 120
+  },
+  {
+    "id": "gearbox_speed", "perk": "push-mode",
+    "slot": "gearbox",
+    "kind": "speed",
+    "name": "Long-ratio box",
+    "speed": 3,
+    "corner": 1,
+    "brake": 1,
+    "price": 120
+  },
+  {
+    "id": "gearbox_corner", "perk": "out-lap",
+    "slot": "gearbox",
+    "kind": "corner",
+    "name": "Short-ratio box",
+    "speed": 1,
+    "corner": 3,
+    "brake": 1,
+    "price": 120
+  },
+  {
+    "id": "gearbox_brake", "perk": "wet-brake",
+    "slot": "gearbox",
+    "kind": "brake",
+    "name": "Engine-brake box",
+    "speed": 1,
+    "corner": 1,
+    "brake": 3,
+    "price": 120
+  },
+  {
+    "id": "suspension_speed", "perk": "fresh-rubber",
+    "slot": "suspension",
+    "kind": "speed",
+    "name": "Stiff-low",
+    "speed": 3,
+    "corner": 1,
+    "brake": 1,
+    "price": 120
+  },
+  {
+    "id": "suspension_corner", "perk": "compliant",
+    "slot": "suspension",
+    "kind": "corner",
+    "name": "Soft-flex",
+    "speed": 1,
+    "corner": 3,
+    "brake": 1,
+    "price": 120
+  },
+  {
+    "id": "suspension_brake", "perk": "quick-jack",
+    "slot": "suspension",
+    "kind": "brake",
+    "name": "Dive-control",
+    "speed": 1,
+    "corner": 1,
+    "brake": 3,
+    "price": 120
+  }
+]

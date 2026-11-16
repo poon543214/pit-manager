@@ -1,0 +1,164 @@
+import { useState } from 'react';
+import { Button } from '../components/Button';
+import { DriverCard } from '../components/DriverCard';
+import { PerkIcon } from '../components/PerkIcon';
+import { PartImg, TireImg } from '../components/Sprites';
+import { StarterPack } from '../components/StarterPack';
+import { COIN_ETH } from '../chain/config';
+import { DRIVERS, PARTS, SLOTS, SLOT_LABEL, TIRES, TIRE_SET_PRICE } from '../shared/constants';
+import { shortAddress } from '../shared/plan';
+import type { TireId } from '../shared/types';
+import { useGame } from '../useGame';
+
+const KIND_LABEL = { speed: 'Speed', corner: 'Corner', brake: 'Brake' } as const;
+
+export function Market() {
+  const { state, service, attempt, notify, go, demo } = useGame();
+  // with a wallet, drivers and parts are NFTs bought for Sepolia ETH; MetaMask checks the balance
+  const onChain = !!state.wallet;
+  const short = (price: number) => !onChain && !demo && state.coins < price;
+  const [pending, setPending] = useState<string | null>(null);
+  const priceLabel = (coins: number) => (onChain ? `${+(coins * COIN_ETH).toFixed(5)} ETH` : coins);
+  const buying = (id: string, buy: () => Promise<void>) => async () => {
+    setPending(id);
+    await buy();
+    setPending(null);
+  };
+
+  return (
+    <div className="page">
+      <StarterPack />
+      <section>
+        <div className="section-head">
+          <h2>Drivers</h2>
+          <p>
+            {onChain
+              ? `Drivers and parts are NFTs: buying mints one to ${shortAddress(state.wallet!)} for Sepolia ETH.`
+              : 'Every driver has 20 stat points and one special skill, so none is best on every track.'}
+          </p>
+        </div>
+        <div className="grid drivers">
+          {DRIVERS.map((d) => {
+            const owned = state.ownedDrivers.includes(d.id);
+            return (
+              <DriverCard
+                key={d.id}
+                driver={d}
+                selected={owned}
+                footer={
+                  owned ? (
+                    <span className="owned">Owned</span>
+                  ) : (
+                    <Button
+                      disabled={short(d.price) || pending !== null}
+                      aria-label={`Buy ${d.name} for ${priceLabel(d.price)}${onChain ? '' : ' coins'}`}
+                      title={short(d.price) ? `Not enough coins: you have ${state.coins}` : undefined}
+                      onClick={buying(d.id, () =>
+                        attempt(() => service.buyDriver(d.id)).then(() => {
+                          if (service.getState().ownedDrivers.includes(d.id)) notify(`${d.name} joined your team`);
+                        }),
+                      )}
+                    >
+                      {pending === d.id ? 'Confirming…' : <>Buy {!onChain && <i className="coin" />} {priceLabel(d.price)}</>}
+                    </Button>
+                  )
+                }
+              />
+            );
+          })}
+        </div>
+      </section>
+
+      <section>
+        <div className="section-head">
+          <h2>Parts</h2>
+          <p>
+            <b className="k-speed">Speed</b> +3 top speed · <b className="k-corner">Corner</b> +3 cornering ·{' '}
+            <b className="k-brake">Brake</b> +3 braking, and +1 to the other two
+          </p>
+        </div>
+        <div className="parts-table">
+          {SLOTS.map((slot) => (
+            <div className="parts-row" key={slot}>
+              <div className="slot-name">{SLOT_LABEL[slot]}</div>
+              {PARTS.filter((p) => p.slot === slot).map((p) => {
+                const owned = state.ownedParts.includes(p.id);
+                return (
+                  <div key={p.id} className={`card part-card kind-${p.kind} ${owned ? 'selected' : ''}`}>
+                    <PartImg p={p} size={56} />
+                    <div className="part-info">
+                      <strong className="name-with-perk">
+                        {p.name} <PerkIcon id={p.perk} />
+                      </strong>
+                      <span className={`tag k-${p.kind}`}>{KIND_LABEL[p.kind]}</span>
+                      <span className="mini-stats">
+                        SPD {p.speed} · CRN {p.corner} · BRK {p.brake}
+                      </span>
+                    </div>
+                    {owned ? (
+                      <span className="owned">Owned</span>
+                    ) : (
+                      <Button
+                        variant="dark"
+                        disabled={short(p.price) || pending !== null}
+                        aria-label={`Buy ${p.name} for ${priceLabel(p.price)}${onChain ? '' : ' coins'}`}
+                        title={short(p.price) ? `Not enough coins: you have ${state.coins}` : undefined}
+                        onClick={buying(p.id, () =>
+                          attempt(() => service.buyPart(p.id)).then(() => {
+                            const s = service.getState();
+                            if (!s.ownedParts.includes(p.id)) return;
+                            notify(
+                              s.loadout.parts[p.slot] === p.id
+                                ? `${p.name} bought and fitted to your ${SLOT_LABEL[p.slot].toLowerCase()}`
+                                : `${p.name} bought. Swap it in from Garage`,
+                            );
+                          }),
+                        )}
+                      >
+                        {pending === p.id ? 'Confirming…' : <>{!onChain && <i className="coin" />} {priceLabel(p.price)}</>}
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <div className="section-head">
+          <h2>Tire sets</h2>
+          <p>Each race uses one set to start and one for every pit stop.</p>
+        </div>
+        <div className="tire-shop">
+          {(Object.keys(TIRES) as TireId[]).map((id) => (
+            <div key={id} className="card part-card">
+              <TireImg id={id} size={48} />
+              <div className="part-info">
+                <b>{TIRES[id].name}</b>
+                <span className="mini-stats">{state.tireSets[id] ?? 0} in stock</span>
+              </div>
+              <Button
+                variant="dark"
+                disabled={short(TIRE_SET_PRICE[id])}
+                aria-label={`Buy a set of ${TIRES[id].name} tires for ${TIRE_SET_PRICE[id]} coins`}
+                onClick={() =>
+                  attempt(() => service.buyTires(id)).then(() => notify(`${TIRES[id].name} set added: ${service.getState().tireSets[id]} in stock`))
+                }
+              >
+                <i className="coin" /> {TIRE_SET_PRICE[id]}
+              </Button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {state.ownedDrivers.length > 0 && (
+        <div className="cta-row">
+          <Button onClick={() => go('garage')}>Go to Garage →</Button>
+        </div>
+      )}
+    </div>
+  );
+}

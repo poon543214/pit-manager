@@ -1,0 +1,8 @@
+[
+  { "id": "nova", "perk": "closer", "name": "Nova Reyes", "skin": "#C68A5E", "hair": "#1F1A17", "eyes": "#3B2416", "hairStyle": "long", "suit": ["#6B2FA0", "#FFFFFF", "#F2C200"], "pace": 7, "consistency": 7, "wet": 6, "price": 0 },
+  { "id": "theo", "perk": "pit-lane-pro", "name": "Theo Brandt", "skin": "#F2C6A0", "hair": "#C9A15A", "eyes": "#4F7A9A", "hairStyle": "short", "suit": ["#0B5FA5", "#FFFFFF", "#E10600"], "pace": 8, "consistency": 6, "wet": 6, "price": 0 },
+  { "id": "aiko", "perk": "tyre-whisperer", "name": "Aiko Mori", "skin": "#EFCBA8", "hair": "#141414", "eyes": "#2B1D14", "hairStyle": "swept", "suit": ["#F4F4F4", "#111111", "#E10600"], "pace": 6, "consistency": 8, "wet": 6, "price": 0 },
+  { "id": "leo", "perk": "launch-control", "name": "Leo Varga", "skin": "#E3B48C", "hair": "#5A3A22", "eyes": "#3E6B3E", "hairStyle": "spiky", "suit": ["#2E7D32", "#111111", "#FFFFFF"], "pace": 9, "consistency": 4, "wet": 7, "price": 0 },
+  { "id": "sana", "perk": "rain-dancer", "name": "Sana Okafor", "skin": "#8D5A3B", "hair": "#141010", "eyes": "#2B1D14", "hairStyle": "curly", "suit": ["#F28C28", "#111111", "#FFFFFF"], "pace": 6, "consistency": 6, "wet": 8, "price": 0 },
+  { "id": "finn", "perk": "closer", "name": "Finn Halvorsen", "skin": "#F5D0B0", "hair": "#B5652B", "eyes": "#4F7A9A", "hairStyle": "cropped", "stubble": true, "suit": ["#8A8A8A", "#111111", "#E10600"], "pace": 7, "consistency": 9, "wet": 4, "price": 0 }
+]

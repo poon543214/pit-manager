@@ -1,0 +1,20 @@
+[
+  {
+    "id": "straight", "name": "Straight GP", "focus": "speed", "tiles": "tiles_straight",
+    "weights": { "speed": 0.6, "corner": 0.2, "brake": 0.2 },
+    "laps": 20, "tireWear": 0.75, "wetChance": 0.2, "baseLap": 72,
+    "path": [[0,0],[900,0],[1050,80],[1050,260],[900,340],[200,340],[60,420],[0,560],[-150,560],[-220,420],[-220,120],[-140,20]]
+  },
+  {
+    "id": "twisty", "name": "Twisty GP", "focus": "corner", "tiles": "tiles_twisty",
+    "weights": { "speed": 0.2, "corner": 0.6, "brake": 0.2 },
+    "laps": 20, "tireWear": 1.35, "wetChance": 0.35, "baseLap": 84,
+    "path": [[0,0],[220,-80],[380,40],[300,200],[460,300],[620,180],[760,300],[700,500],[480,560],[360,700],[140,640],[80,460],[-120,420],[-200,240],[-120,80]]
+  },
+  {
+    "id": "stopgo", "name": "Stop-and-Go GP", "focus": "brake", "tiles": "tiles_stopgo",
+    "weights": { "speed": 0.2, "corner": 0.2, "brake": 0.6 },
+    "laps": 20, "tireWear": 1.05, "wetChance": 0.25, "baseLap": 78,
+    "path": [[0,0],[500,0],[500,300],[200,300],[200,520],[700,520],[700,800],[-100,800],[-100,450],[-300,450],[-300,100]]
+  }
+]
