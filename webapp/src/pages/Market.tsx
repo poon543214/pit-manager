@@ -4,7 +4,6 @@ import { DriverCard } from '../components/DriverCard';
 import { PerkIcon } from '../components/PerkIcon';
 import { PartImg, TireImg } from '../components/Sprites';
 import { StarterPack } from '../components/StarterPack';
-import { COIN_ETH } from '../chain/config';
 import { DRIVERS, PARTS, SLOTS, SLOT_LABEL, TIRES, TIRE_SET_PRICE } from '../shared/constants';
 import { shortAddress } from '../shared/plan';
 import type { TireId } from '../shared/types';
@@ -14,11 +13,13 @@ const KIND_LABEL = { speed: 'Speed', corner: 'Corner', brake: 'Brake' } as const
 
 export function Market() {
   const { state, service, attempt, notify, go, demo } = useGame();
-  // with a wallet, drivers and parts are NFTs bought for Sepolia ETH; MetaMask checks the balance
+  // with a wallet, drivers and parts are NFTs bought with on-chain coins (ETH → coins with + at the top)
   const onChain = !!state.wallet;
-  const short = (price: number) => !onChain && !demo && state.coins < price;
+  // NFTs always cost coins on chain; demo mode only waives tires, repairs and practice
+  const short = (price: number) => (onChain ? state.coins < price : !demo && state.coins < price);
+  const shortTires = (price: number) => !demo && state.coins < price;
   const [pending, setPending] = useState<string | null>(null);
-  const priceLabel = (coins: number) => (onChain ? `${+(coins * COIN_ETH).toFixed(5)} ETH` : coins);
+  const priceLabel = (coins: number) => coins;
   const buying = (id: string, buy: () => Promise<void>) => async () => {
     setPending(id);
     await buy();
@@ -33,7 +34,7 @@ export function Market() {
           <h2>Drivers</h2>
           <p>
             {onChain
-              ? `Drivers and parts are NFTs: buying mints one to ${shortAddress(state.wallet!)} for Sepolia ETH.`
+              ? `Drivers and parts are NFTs bought with coins: each purchase mints one to ${shortAddress(state.wallet!)}. Need coins? Tap + next to your balance.`
               : 'Every driver has 20 stat points and one special skill, so none is best on every track.'}
           </p>
         </div>
@@ -51,7 +52,7 @@ export function Market() {
                   ) : (
                     <Button
                       disabled={short(d.price) || pending !== null}
-                      aria-label={`Buy ${d.name} for ${priceLabel(d.price)}${onChain ? '' : ' coins'}`}
+                      aria-label={`Buy ${d.name} for ${priceLabel(d.price)} coins`}
                       title={short(d.price) ? `Not enough coins: you have ${state.coins}` : undefined}
                       onClick={buying(d.id, () =>
                         attempt(() => service.buyDriver(d.id)).then(() => {
@@ -59,7 +60,7 @@ export function Market() {
                         }),
                       )}
                     >
-                      {pending === d.id ? 'Confirming…' : <>Buy {!onChain && <i className="coin" />} {priceLabel(d.price)}</>}
+                      {pending === d.id ? 'Confirming…' : <>Buy <i className="coin" /> {priceLabel(d.price)}</>}
                     </Button>
                   )
                 }
@@ -101,7 +102,7 @@ export function Market() {
                       <Button
                         variant="dark"
                         disabled={short(p.price) || pending !== null}
-                        aria-label={`Buy ${p.name} for ${priceLabel(p.price)}${onChain ? '' : ' coins'}`}
+                        aria-label={`Buy ${p.name} for ${priceLabel(p.price)} coins`}
                         title={short(p.price) ? `Not enough coins: you have ${state.coins}` : undefined}
                         onClick={buying(p.id, () =>
                           attempt(() => service.buyPart(p.id)).then(() => {
@@ -115,7 +116,7 @@ export function Market() {
                           }),
                         )}
                       >
-                        {pending === p.id ? 'Confirming…' : <>{!onChain && <i className="coin" />} {priceLabel(p.price)}</>}
+                        {pending === p.id ? 'Confirming…' : <><i className="coin" /> {priceLabel(p.price)}</>}
                       </Button>
                     )}
                   </div>
@@ -141,13 +142,17 @@ export function Market() {
               </div>
               <Button
                 variant="dark"
-                disabled={short(TIRE_SET_PRICE[id])}
+                disabled={shortTires(TIRE_SET_PRICE[id]) || pending !== null}
                 aria-label={`Buy a set of ${TIRES[id].name} tires for ${TIRE_SET_PRICE[id]} coins`}
-                onClick={() =>
-                  attempt(() => service.buyTires(id)).then(() => notify(`${TIRES[id].name} set added: ${service.getState().tireSets[id]} in stock`))
-                }
+                onClick={buying(`tire-${id}`, () => {
+                  const before = service.getState().tireSets[id] ?? 0;
+                  return attempt(() => service.buyTires(id)).then(() => {
+                    const now = service.getState().tireSets[id] ?? 0;
+                    if (now > before) notify(`${TIRES[id].name} set added: ${now} in stock`);
+                  });
+                })}
               >
-                <i className="coin" /> {TIRE_SET_PRICE[id]}
+                {pending === `tire-${id}` ? 'Confirming…' : <><i className="coin" /> {TIRE_SET_PRICE[id]}</>}
               </Button>
             </div>
           ))}

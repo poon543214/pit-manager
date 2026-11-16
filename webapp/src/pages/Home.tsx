@@ -1,3 +1,4 @@
+import { CHAIN_NAME } from '../chain/config';
 import { Button } from '../components/Button';
 import { WeatherIcon } from '../components/PixelIcon';
 import { DriverImg } from '../components/Sprites';
@@ -48,18 +49,18 @@ export function Home() {
       {state.wallet ? (
         <div className="glass home-id">
           <span>
-            <small>Wallet · Sepolia</small>
+            <small>Wallet · {CHAIN_NAME}</small>
             {shortAddress(state.wallet)}
           </span>
           <span>
-            <small>{demo ? 'Coins · demo' : 'Coins'}</small>
+            <small>Coins</small>
             <span className="coin-val">
-              <i className="coin" /> {demo ? '∞' : state.coins.toLocaleString()}
+              <i className="coin" /> {state.coins.toLocaleString()}
             </span>
           </span>
           {state.ethBalance !== null && (
             <span>
-              <small>Sepolia ETH</small>
+              <small>{CHAIN_NAME} ETH</small>
               <span className="coin-val">
                 <i className="eth-mark" aria-hidden /> {state.ethBalance}
               </span>

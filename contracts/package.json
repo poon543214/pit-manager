@@ -2,6 +2,9 @@
   "name": "pit-wall-contracts",
   "private": true,
   "scripts": {
+    "chain": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "steward": "hardhat run scripts/steward.js --network localhost",
     "compile": "hardhat compile",
     "test": "hardhat test",
     "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia"

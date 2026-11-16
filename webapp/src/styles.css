@@ -776,3 +776,23 @@ button:disabled.driver-row, button:disabled.chip, .cb-callout:disabled { opacity
   background: none; border: 1px dashed rgba(255,255,255,.5);
 }
 .add-stop:hover { background: rgba(255,255,255,.08); }
+
+/* ETH → coins exchange */
+.coin-plus {
+  display: inline-grid; place-items: center; width: 20px; height: 20px; margin-left: 2px; padding: 0;
+  font: 700 14px/1 var(--pixel); color: var(--white); background: var(--red); border: 1px solid var(--black); cursor: pointer;
+}
+.coin-plus:hover { background: var(--red-dark); }
+.coin-plus:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+.exchange { max-width: 480px; white-space: normal; text-align: left; font-size: 15px; }
+.exchange-packs { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 14px 0 10px; }
+.exchange-packs button { font-family: var(--pixel); font-size: 11px; }
+.exchange-amount { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 700; }
+.exchange-amount input { width: 140px; padding: 6px 8px; font: inherit; text-align: right; border: 1px solid var(--black); background: var(--white); color: var(--black); }
+.exchange-sum { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 14px 0 0; }
+.exchange-sum dt { opacity: .8; }
+.exchange-sum dd { margin: 0; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.exchange-sum dd.bad, .exchange-note { color: var(--red); }
+.exchange-note { margin: 8px 0 0; font-size: 13px; font-weight: 700; }
+.exchange .dialog-actions { flex-wrap: wrap; }
+.exchange-faucet { margin-right: auto; }

@@ -1,5 +1,5 @@
-import { BrowserProvider, JsonRpcSigner } from "ethers";
-import { CHAIN_ID_HEX, CHAIN_NAME } from "./config";
+import { BrowserProvider, JsonRpcProvider, JsonRpcSigner, parseEther, toQuantity } from "ethers";
+import { CHAIN, CHAIN_ID_HEX, CHAIN_NAME, IS_LOCAL } from "./config";
 
 declare global {
   interface Window {
@@ -46,12 +46,43 @@ async function ensureNetwork(): Promise<void> {
   if (current.toLowerCase() === CHAIN_ID_HEX) return;
 
   try {
-    await window.ethereum.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: CHAIN_ID_HEX }],
-    });
+    await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_ID_HEX }] });
+  } catch (e: any) {
+    // 4902 = MetaMask ยังไม่รู้จัก network นี้: เพิ่มให้เลย (เช่น Hardhat Local ครั้งแรก)
+    if (e?.code !== 4902 && e?.data?.originalError?.code !== 4902) throw new Error(`Switch MetaMask to the ${CHAIN_NAME} network.`);
+    await window.ethereum
+      .request({
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainId: CHAIN_ID_HEX,
+            chainName: CHAIN_NAME,
+            rpcUrls: [CHAIN.rpcUrl],
+            nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+            ...(CHAIN.explorer && { blockExplorerUrls: [CHAIN.explorer] }),
+          },
+        ],
+      })
+      .catch(() => {
+        throw new Error(`Add the ${CHAIN_NAME} network (${CHAIN.rpcUrl}) to MetaMask.`);
+      });
+  }
+}
+
+/**
+ * ก๊อกน้ำ ETH ทดสอบ: เฉพาะ Hardhat node ในเครื่อง เติม ETH ให้กระเป๋าตรงที่ node (hardhat_setBalance)
+ * ไม่ต้อง import บัญชีทดสอบเข้า MetaMask
+ */
+export async function topUpTestEth(address: string, eth = 10): Promise<void> {
+  if (!IS_LOCAL) throw new Error("Test ETH is only for the local chain.");
+  const node = new JsonRpcProvider(CHAIN.rpcUrl);
+  try {
+    const balance = await node.getBalance(address);
+    await node.send("hardhat_setBalance", [address, toQuantity(balance + parseEther(String(eth)))]);
   } catch {
-    throw new Error(`Switch MetaMask to the ${CHAIN_NAME} network.`);
+    throw new Error(`The local chain isn't running at ${CHAIN.rpcUrl}. Start it with npm run chain in contracts/.`);
+  } finally {
+    node.destroy();
   }
 }
 

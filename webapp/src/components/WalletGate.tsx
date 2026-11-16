@@ -1,3 +1,4 @@
+import { CHAIN_NAME } from '../chain/config';
 import { useGame } from '../useGame';
 import { ConfirmDialog } from './ConfirmDialog';
 
@@ -8,7 +9,7 @@ export function WalletGate() {
     <ConfirmDialog
       open={gate !== null}
       title="Connect your wallet"
-      body="Your drivers and parts are NFTs on Sepolia, and your wallet is your player account. Connect MetaMask to continue."
+      body={`Your drivers, parts and coins live on ${CHAIN_NAME}, and your wallet is your player account. Connect MetaMask to continue.`}
       confirmLabel="Connect wallet"
       onCancel={closeGate}
       onConfirm={connectWallet}

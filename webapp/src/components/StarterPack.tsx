@@ -25,7 +25,7 @@ export function StarterPack() {
   return (
     <section className="starter card" aria-labelledby="starter-title">
       <h2 id="starter-title">Free starter pack</h2>
-      <p>One per wallet: a driver and four parts of one kind, minted to your wallet as NFTs. You only pay gas.</p>
+      <p>One per wallet: a driver and four parts of one kind, minted to your wallet as NFTs, plus 200 coins. You only pay gas.</p>
       <div className="starter-drivers" role="radiogroup" aria-label="Starter driver">
         {DRIVERS.map((d) => (
           <button

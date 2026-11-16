@@ -8,10 +8,13 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 ///
 /// The catalog holds 5 driver types and 12 part types, each with a `key` that matches the
 /// "id" in the game's drivers.json / parts.json. Any number of tokens can be minted per type:
-/// every new wallet claims one free starter pack, and anything else is bought with ETH.
+/// every new wallet claims one free starter pack, and anything else is bought with game coins.
 /// Stats live on-chain; look, name and perk stay in the game's JSON, linked by `key`.
 ///
-/// Play to earn: 30% of every sale goes into the season prize pool (anyone can also sponsor it).
+/// Coins: the game's one currency, kept as a balance here. ETH buys coins (buyCoins); coins buy NFTs
+/// and are spent on in-game items (tires, repairs, practice). Coins never turn back into ETH.
+///
+/// Play to earn: 30% of every ETH exchanged for coins goes into the season prize pool (anyone can also sponsor it).
 /// Players post each race result (points plus a hash of the full race record, which anyone can
 /// re-run from its seed). The owner acts as race steward: it can void a result whose record does
 /// not check out, and ends the season, which makes the pool claimable by the top 3 (50/30/20%).
@@ -26,7 +29,7 @@ contract PitWallNFT is ERC721Enumerable {
         uint8 pace;
         uint8 consistency;
         uint8 wetSkill;
-        uint256 price; // wei
+        uint256 price; // coins
     }
 
     struct PartType {
@@ -35,7 +38,7 @@ contract PitWallNFT is ERC721Enumerable {
         uint8 speed;
         uint8 corner;
         uint8 brake;
-        uint256 price; // wei
+        uint256 price; // coins
     }
 
     /// What one token is: a driver or a part, and its stats. Returned by tokenInfo.
@@ -48,8 +51,10 @@ contract PitWallNFT is ERC721Enumerable {
         uint8 c; // driver: wetSkill   / part: brake
     }
 
-    /// 1 game coin = 0.00001 ETH, so a 300-coin driver costs 0.003 Sepolia ETH.
+    /// Exchange rate: 1 game coin = 0.00001 ETH (1,000 coins = 0.01 ETH).
     uint256 public constant COIN = 0.00001 ether;
+    /// Coins that come with the starter pack, for the first tire sets and repairs.
+    uint256 public constant STARTER_COINS = 200;
     uint8 public constant DRIVER_TYPES = 5;
     uint8 public constant PART_TYPES = 12;
 
@@ -65,19 +70,21 @@ contract PitWallNFT is ERC721Enumerable {
     /// how many tokens of a type (keccak(key)) an address holds, so nobody buys a duplicate
     mapping(address => mapping(bytes32 => uint256)) public held;
     mapping(address => bool) public starterClaimed;
+    /// game coins per wallet
+    mapping(address => uint256) public coins;
 
     address public owner;
     string private _base;
 
     // ---------- seasons ----------
-    uint256 public constant POOL_BPS = 3000; // share of each sale that goes to the prize pool
+    uint256 public constant POOL_BPS = 3000; // share of each coin purchase (ETH) that goes to the prize pool
     uint256 public constant MAX_POINTS = 25; // a race win
     uint256 public constant RACES_PER_SEASON = 6; // matches the game's season length
     uint256[3] public SHARES = [5000, 3000, 2000]; // top 3, in basis points of the pool
 
     uint256 public season = 1;
     uint256 public seasonPool; // wei, paid out when the season ends
-    uint256 public ownerFunds; // wei, the rest of sales: what withdraw() may take
+    uint256 public ownerFunds; // wei, the rest of coin purchases: what withdraw() may take
     mapping(address => uint256) public claimable; // won prizes waiting for claim()
     mapping(address => uint256) public driversHeld;
 
@@ -89,6 +96,8 @@ contract PitWallNFT is ERC721Enumerable {
     mapping(uint256 => mapping(address => mapping(uint256 => bytes32))) public recordAt;
 
     event StarterClaimed(address indexed player, string driverKey, uint8 kind);
+    event CoinsBought(address indexed player, uint256 coins, uint256 paid);
+    event CoinsSpent(address indexed player, uint256 coins, string item);
     event RaceSubmitted(uint256 indexed season, address indexed player, uint256 round, uint256 points, bytes32 record);
     event RaceVoided(uint256 indexed season, address indexed player, uint256 round, uint256 points);
     event SeasonEnded(uint256 indexed season, address[3] top, uint256[3] prizes);
@@ -102,6 +111,7 @@ contract PitWallNFT is ERC721Enumerable {
     constructor() ERC721("Pit Wall NFT", "PIT") {
         owner = msg.sender;
 
+        // prices in coins
         _addDriver("charles", 9, 5, 6, 300);
         _addDriver("kimi", 8, 5, 7, 280);
         _addDriver("max", 7, 8, 5, 260);
@@ -114,23 +124,24 @@ contract PitWallNFT is ERC721Enumerable {
         for (uint8 s = 0; s < 4; s++) {
             for (uint8 k = 0; k < 3; k++) {
                 string memory key = string.concat(slotNames[s], "_", kindNames[k]);
-                _partTypes.push(PartType(key, Slot(s), k == 0 ? 3 : 1, k == 1 ? 3 : 1, k == 2 ? 3 : 1, 120 * COIN));
+                _partTypes.push(PartType(key, Slot(s), k == 0 ? 3 : 1, k == 1 ? 3 : 1, k == 2 ? 3 : 1, 120));
                 _partIndex[keccak256(bytes(key))] = _partTypes.length;
             }
         }
     }
 
-    function _addDriver(string memory key, uint8 pace, uint8 consistency, uint8 wetSkill, uint256 coins) private {
-        _driverTypes.push(DriverType(key, pace, consistency, wetSkill, coins * COIN));
+    function _addDriver(string memory key, uint8 pace, uint8 consistency, uint8 wetSkill, uint256 price) private {
+        _driverTypes.push(DriverType(key, pace, consistency, wetSkill, price));
         _driverIndex[keccak256(bytes(key))] = _driverTypes.length;
     }
 
     // ---------- getting NFTs ----------
-    /// One free starter pack per wallet: the chosen driver plus one part per slot of the chosen kind.
+    /// One free starter pack per wallet: the chosen driver, one part per slot of the chosen kind, and STARTER_COINS.
     function claimStarter(string calldata driverKey, uint8 kind) external {
         require(!starterClaimed[msg.sender], "starter already claimed");
         require(kind < 3, "kind is 0 speed, 1 corner, 2 brake");
         starterClaimed[msg.sender] = true;
+        coins[msg.sender] += STARTER_COINS;
         _mintDriver(msg.sender, _driverAt(driverKey));
         for (uint256 s = 0; s < 4; s++) {
             if (held[msg.sender][keccak256(bytes(_partTypes[s * 3 + kind].key))] == 0) _mintPart(msg.sender, s * 3 + kind);
@@ -138,29 +149,46 @@ contract PitWallNFT is ERC721Enumerable {
         emit StarterClaimed(msg.sender, driverKey, kind);
     }
 
-    function buyDriver(string calldata key) external payable {
-        uint256 i = _driverAt(key);
-        require(msg.value == _driverTypes[i].price, "send the exact price");
-        require(held[msg.sender][keccak256(bytes(key))] == 0, "already own this driver");
-        _collect();
-        _mintDriver(msg.sender, i);
-    }
-
-    function buyPart(string calldata key) external payable {
-        uint256 i = _partIndex[keccak256(bytes(key))];
-        require(i != 0, "unknown part");
-        i -= 1;
-        require(msg.value == _partTypes[i].price, "send the exact price");
-        require(held[msg.sender][keccak256(bytes(key))] == 0, "already own this part");
-        _collect();
-        _mintPart(msg.sender, i);
-    }
-
-    /// Split a sale: POOL_BPS to the season pool, the rest to the owner.
-    function _collect() private {
+    // ---------- coins ----------
+    /// Exchange ETH for coins at COIN wei each. 30% of the ETH funds the season pool, the rest the owner.
+    function buyCoins() external payable {
+        require(msg.value > 0 && msg.value % COIN == 0, "send a whole number of coins");
+        uint256 amount = msg.value / COIN;
+        coins[msg.sender] += amount;
         uint256 toPool = (msg.value * POOL_BPS) / 10000;
         seasonPool += toPool;
         ownerFunds += msg.value - toPool;
+        emit CoinsBought(msg.sender, amount, msg.value);
+    }
+
+    /// Spend coins on an in-game item (tire sets, repairs, practice). The coins are burned.
+    function spendCoins(uint256 amount, string calldata item) external {
+        require(amount > 0, "nothing to spend");
+        _pay(amount);
+        emit CoinsSpent(msg.sender, amount, item);
+    }
+
+    function _pay(uint256 amount) private {
+        require(coins[msg.sender] >= amount, "not enough coins");
+        coins[msg.sender] -= amount;
+    }
+
+    function buyDriver(string calldata key) external {
+        uint256 i = _driverAt(key);
+        require(held[msg.sender][keccak256(bytes(key))] == 0, "already own this driver");
+        _pay(_driverTypes[i].price);
+        _mintDriver(msg.sender, i);
+        emit CoinsSpent(msg.sender, _driverTypes[i].price, key);
+    }
+
+    function buyPart(string calldata key) external {
+        uint256 i = _partIndex[keccak256(bytes(key))];
+        require(i != 0, "unknown part");
+        i -= 1;
+        require(held[msg.sender][keccak256(bytes(key))] == 0, "already own this part");
+        _pay(_partTypes[i].price);
+        _mintPart(msg.sender, i);
+        emit CoinsSpent(msg.sender, _partTypes[i].price, key);
     }
 
     // ---------- seasons: post, steward, pay out ----------
@@ -308,6 +336,7 @@ contract PitWallNFT is ERC721Enumerable {
         return _partTypes[i];
     }
 
+    /// Price in coins.
     function priceOf(string calldata key) external view returns (uint256) {
         bytes32 h = keccak256(bytes(key));
         if (_driverIndex[h] != 0) return _driverTypes[_driverIndex[h] - 1].price;
@@ -327,7 +356,7 @@ contract PitWallNFT is ERC721Enumerable {
     }
 
     // ---------- owner ----------
-    /// Only the owner's share of sales: the prize pool and unclaimed prizes stay for the players.
+    /// Only the owner's 70% of coin purchases: the prize pool and unclaimed prizes stay for the players.
     function withdraw() external onlyOwner {
         uint256 amount = ownerFunds;
         ownerFunds = 0;

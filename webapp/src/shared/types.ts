@@ -189,14 +189,14 @@ export interface PlayerState {
   season: { number: number; points: Record<string, number>; pool: number };
   /** connected wallet address while drivers and parts are read from the chain; null when playing on browser holdings */
   wallet: string | null;
-  /** the connected wallet's spendable Sepolia ETH, e.g. "0.0421" (null when no wallet) */
+  /** the connected wallet's spendable ETH on the game's chain, e.g. "0.0421" (null when no wallet) */
   ethBalance: string | null;
   /** the on-chain season (real ETH pool) while a wallet is connected */
   chainSeason: ChainSeason | null;
   /** whether the connected wallet has used its one free starter pack (null when no wallet) */
   starterClaimed: boolean | null;
   /** the browser's own drivers and parts, set aside while a wallet supplies them */
-  mockOwned: { drivers: string[]; parts: string[] } | null;
+  mockOwned: { drivers: string[]; parts: string[]; coins?: number } | null;
   /** finished seasons where you made the top 3; soulbound trophies on chain */
   trophies: { season: number; rank: number; prize: number }[];
   /** 0–100 per owned driver: racing tires a driver out, sitting a race out lets them recover */

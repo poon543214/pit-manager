@@ -19,14 +19,14 @@ describe('PitWallNFT', () => {
       const d = drivers[i];
       const t = await nft.driverType(i);
       expect([t.key, Number(t.pace), Number(t.consistency), Number(t.wetSkill)]).to.deep.equal([d.id, d.pace, d.consistency, d.wet]);
-      expect(t.price).to.equal(BigInt(d.price) * COIN);
+      expect(t.price).to.equal(BigInt(d.price));
     }
     for (let i = 0; i < 12; i++) {
       const t = await nft.partType(i);
       const p = parts.find((x) => x.id === t.key);
       expect(p, `part ${t.key} in parts.json`).to.exist;
       expect([SLOTS[Number(t.slot)], Number(t.speed), Number(t.corner), Number(t.brake)]).to.deep.equal([p.slot, p.speed, p.corner, p.brake]);
-      expect(t.price).to.equal(BigInt(p.price) * COIN);
+      expect(t.price).to.equal(BigInt(p.price));
     }
   });
 
@@ -36,17 +36,33 @@ describe('PitWallNFT', () => {
     expect(ids.length).to.equal(5);
     expect(infos.map((t) => t.key)).to.deep.equal(['max', 'engine_corner', 'aero_corner', 'gearbox_corner', 'suspension_corner']);
     expect(infos[0].isDriver).to.equal(true);
+    expect(await nft.coins(alice.address)).to.equal(200n);
     await expect(nft.connect(alice).claimStarter('kimi', 0)).to.be.revertedWith('starter already claimed');
   });
 
-  it('buying needs the exact price and refuses a duplicate', async () => {
-    const price = await nft.priceOf('charles');
-    await expect(nft.connect(bob).buyDriver('charles', { value: price - 1n })).to.be.revertedWith('send the exact price');
-    await expect(nft.connect(bob).buyDriver('charles', { value: price + 1n })).to.be.revertedWith('send the exact price');
-    await expect(nft.connect(bob).buyPart('aero_brake', { value: 1n })).to.be.revertedWith('send the exact price');
-    await nft.connect(bob).buyDriver('charles', { value: price });
-    await expect(nft.connect(bob).buyDriver('charles', { value: price })).to.be.revertedWith('already own this driver');
-    await nft.connect(bob).buyPart('aero_brake', { value: await nft.priceOf('aero_brake') });
+  it('ETH buys coins at the fixed rate, 30% of it into the season pool', async () => {
+    await expect(nft.connect(bob).buyCoins({ value: 0n })).to.be.revertedWith('send a whole number of coins');
+    await expect(nft.connect(bob).buyCoins({ value: COIN + 1n })).to.be.revertedWith('send a whole number of coins');
+    await expect(nft.connect(bob).buyCoins({ value: COIN * 1000n }))
+      .to.emit(nft, 'CoinsBought')
+      .withArgs(bob.address, 1000n, COIN * 1000n);
+    expect(await nft.coins(bob.address)).to.equal(1000n);
+    expect(await nft.seasonPool()).to.equal((COIN * 1000n * 3000n) / 10000n);
+    expect(await nft.ownerFunds()).to.equal((COIN * 1000n * 7000n) / 10000n);
+  });
+
+  it('coins buy NFTs and in-game items; a duplicate or a short balance is refused', async () => {
+    await expect(nft.connect(bob).buyDriver('charles')).to.be.revertedWith('not enough coins');
+    await nft.connect(bob).buyCoins({ value: COIN * 500n });
+    await nft.connect(bob).buyDriver('charles'); // 300
+    await expect(nft.connect(bob).buyDriver('charles')).to.be.revertedWith('already own this driver');
+    await nft.connect(bob).buyPart('aero_brake'); // 120
+    expect(await nft.coins(bob.address)).to.equal(80n);
+    await expect(nft.connect(bob).buyPart('engine_speed')).to.be.revertedWith('not enough coins');
+    await expect(nft.connect(bob).spendCoins(30, 'tires:soft')).to.emit(nft, 'CoinsSpent').withArgs(bob.address, 30n, 'tires:soft');
+    await expect(nft.connect(bob).spendCoins(51, 'repair')).to.be.revertedWith('not enough coins');
+    await expect(nft.connect(bob).spendCoins(0, 'x')).to.be.revertedWith('nothing to spend');
+    expect(await nft.coins(bob.address)).to.equal(50n);
     const [, infos] = await nft.inventoryOf(bob.address);
     expect(infos.map((t) => t.key)).to.deep.equal(['charles', 'aero_brake']);
   });
@@ -58,8 +74,10 @@ describe('PitWallNFT', () => {
     expect((await nft.inventoryOf(alice.address))[1].map((t) => t.key)).to.not.include('oscar');
     expect((await nft.inventoryOf(bob.address))[1].map((t) => t.key)).to.deep.equal(['oscar']);
     // alice can buy oscar again now; bob already holds one
-    await nft.connect(alice).buyDriver('oscar', { value: await nft.priceOf('oscar') });
-    await expect(nft.connect(bob).buyDriver('oscar', { value: await nft.priceOf('oscar') })).to.be.revertedWith('already own this driver');
+    await nft.connect(alice).buyCoins({ value: COIN * 300n });
+    await nft.connect(alice).buyDriver('oscar');
+    await nft.connect(bob).buyCoins({ value: COIN * 300n });
+    await expect(nft.connect(bob).buyDriver('oscar')).to.be.revertedWith('already own this driver');
   });
 
   it('tokenURI is baseURI + key, and only the owner sets it or withdraws', async () => {
@@ -70,8 +88,8 @@ describe('PitWallNFT', () => {
     expect(await nft.tokenURI(0)).to.equal('ipfs://CID/fernando.json');
     expect(await nft.tokenURI(1)).to.equal('ipfs://CID/engine_brake.json');
 
-    const price = await nft.priceOf('kimi');
-    await nft.connect(bob).buyDriver('kimi', { value: price });
+    const price = COIN * 280n;
+    await nft.connect(bob).buyCoins({ value: price });
     await expect(nft.connect(bob).withdraw()).to.be.revertedWith('not owner');
     // the owner takes only 70%: the other 30% went to the season pool
     await expect(nft.withdraw()).to.changeEtherBalance(owner, price - (price * 3000n) / 10000n);

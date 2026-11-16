@@ -14,6 +14,7 @@ import {
   RIVALS,
   SLOTS,
   TIRES,
+  TIRE_SET_PRICE,
   byId,
   applyCatalogStats,
 } from '../shared/constants';
@@ -23,10 +24,10 @@ import { createRng } from '../shared/rng';
 import type { Entrant, Loadout, PlayerState, RaceResult, TireId, Track, Weather } from '../shared/types';
 import { practice } from '../sim/practice';
 import { projectedTotal, simulateRace } from '../sim/simulateRace';
-import { buy, claimStarter, ethBalance, getInventory, priceOf } from '../chain/chainInventory';
+import { buy, buyCoins, claimStarter, ethBalance, getInventory, spendCoins } from '../chain/chainInventory';
 import { CONTRACT_ADDRESS } from '../chain/config';
 import { claimPrize, getSeason, submitRace } from '../chain/season';
-import { connectWallet, onWalletChange, reconnectWallet, type WalletSession } from '../chain/wallet';
+import { connectWallet, onWalletChange, reconnectWallet, topUpTestEth, type WalletSession } from '../chain/wallet';
 import type { GameService } from './gameService';
 
 /** The driver's perk plus one from each fitted part. */
@@ -168,8 +169,10 @@ export function createMockGameService(): GameService {
     applyCatalogStats(inv);
     store.update((st) => ({
       ...st,
-      mockOwned: st.mockOwned ?? { drivers: st.ownedDrivers, parts: st.ownedParts },
+      mockOwned: st.mockOwned ?? { drivers: st.ownedDrivers, parts: st.ownedParts, coins: st.coins },
       wallet: s0.address,
+      // with a wallet, coins are the on-chain balance
+      coins: inv.coins,
       starterClaimed: inv.starterClaimed,
       ethBalance: eth,
       chainSeason,
@@ -184,8 +187,8 @@ export function createMockGameService(): GameService {
     applyCatalogStats(null);
     store.update((st) => {
       if (!st.mockOwned) return { ...st, wallet: null, starterClaimed: null, ethBalance: null, chainSeason: null };
-      const { drivers, parts } = st.mockOwned;
-      return { ...st, wallet: null, starterClaimed: null, ethBalance: null, chainSeason: null, mockOwned: null, ownedDrivers: drivers, ownedParts: parts, loadout: prune(st.loadout, drivers, parts) };
+      const { drivers, parts, coins = st.coins } = st.mockOwned;
+      return { ...st, coins, wallet: null, starterClaimed: null, ethBalance: null, chainSeason: null, mockOwned: null, ownedDrivers: drivers, ownedParts: parts, loadout: prune(st.loadout, drivers, parts) };
     });
   };
 
@@ -223,6 +226,18 @@ export function createMockGameService(): GameService {
     const result = simulateRace([me, ...c.field], slot.track, seed, weather, slot.track.laps, slot.rainChance);
     return { ...result, proof: { round: c.round, hash: c.hash, salt: c.salt, loadout: c.loadout, calls: c.calls ?? [] } };
   };
+  /**
+   * With a wallet (and outside demo mode) coins are spent on chain: one MetaMask confirm, then the balance is re-read.
+   * Returns false when the caller should charge the browser's coins instead.
+   */
+  const payOnChain = async (cost: number, item: string) => {
+    if (!session || demo) return false;
+    const have = store.get().coins;
+    if (have < cost) throw new Error(`That costs ${cost} coins and you have ${have}. Tap + to exchange ETH for coins.`);
+    await spendCoins(session.signer, cost, item);
+    await syncWallet();
+    return true;
+  };
   const runsKey = (driverId: string | null) => `${round()}:${driverId}`;
   const practiceLeft = () => {
     const s = store.get();
@@ -234,17 +249,34 @@ export function createMockGameService(): GameService {
     getState: store.get,
     subscribe: store.subscribe,
 
-    // with a wallet, buying mints an NFT for Sepolia ETH; without one, the browser shop sells for coins
+    // with a wallet, buying mints an NFT paid with on-chain coins; without one, the browser shop sells for local coins
     async buyDriver(id) {
       if (!session) return market.buyDriver(id);
+      const d = byId(DRIVERS, id)!;
       if (store.get().ownedDrivers.includes(id)) throw new Error('This wallet already owns that driver.');
-      await buy(session.signer, session.provider, id, true);
+      if (store.get().coins < d.price) throw new Error(`${d.name} costs ${d.price} coins and you have ${store.get().coins}. Tap + to exchange ETH for coins.`);
+      await buy(session.signer, id, true);
       await syncWallet();
     },
     async buyPart(id) {
       if (!session) return market.buyPart(id);
+      const p = byId(PARTS, id)!;
       if (store.get().ownedParts.includes(id)) throw new Error('This wallet already owns that part.');
-      await buy(session.signer, session.provider, id, false);
+      if (store.get().coins < p.price) throw new Error(`${p.name} costs ${p.price} coins and you have ${store.get().coins}. Tap + to exchange ETH for coins.`);
+      await buy(session.signer, id, false);
+      await syncWallet();
+    },
+
+    async buyCoins(coins) {
+      if (!session) throw new Error('Connect your wallet first.');
+      if (!Number.isInteger(coins) || coins <= 0) throw new Error('Pick how many coins to buy.');
+      await buyCoins(session.signer, coins);
+      await syncWallet();
+    },
+
+    async topUpTestEth() {
+      if (!session) throw new Error('Connect your wallet first.');
+      await topUpTestEth(session.address);
       await syncWallet();
     },
 
@@ -270,11 +302,11 @@ export function createMockGameService(): GameService {
       await syncWallet();
     },
 
-    async priceEth(id) {
-      if (!session) throw new Error('Connect your wallet first.');
-      return priceOf(session.provider, id);
+    async buyTires(id, count = 1) {
+      if (await payOnChain(TIRE_SET_PRICE[id] * count, `tires:${id}x${count}`))
+        store.update((st) => ({ ...st, tireSets: { ...st.tireSets, [id]: (st.tireSets[id] ?? 0) + count } }));
+      else market.buyTires(id, count);
     },
-    buyTires: async (id, count) => market.buyTires(id, count),
 
     async repairPart(id) {
       const s = store.get();
@@ -283,7 +315,8 @@ export function createMockGameService(): GameService {
       const cost = repairCost(p.price, s.partWear[id] ?? 100);
       if (cost <= 0) throw new Error(`${p.name} is already in perfect shape.`);
       if (!demo && s.coins < cost) throw new Error(`Repairing ${p.name} costs ${cost} coins and you have ${s.coins}.`);
-      store.update((st) => ({ ...st, ...spend(st, cost, demo), partWear: { ...st.partWear, [id]: 100 } }));
+      const paid = await payOnChain(cost, `repair:${id}`);
+      store.update((st) => ({ ...st, ...(paid ? {} : spend(st, cost, demo)), partWear: { ...st.partWear, [id]: 100 } }));
     },
 
     async setLoadout(patch) {
@@ -313,11 +346,12 @@ export function createMockGameService(): GameService {
       if (practiceLeft() === 0) {
         throw new Error(`${me.driver.name} has used all ${PRACTICE_RUNS_PER_TRACK} practice runs for ${slot.track.name}.`);
       }
+      const paid = await payOnChain(PRACTICE_COST, `practice:${slot.round}`);
       const report = practice(me, slot.track, slot.weather, Date.now() & 0xffffff);
       const key = runsKey(me.driver.id);
       store.update((st) => ({
         ...st,
-        ...spend(st, PRACTICE_COST, demo),
+        ...(paid ? {} : spend(st, PRACTICE_COST, demo)),
         practiceRuns: { ...st.practiceRuns, [key]: (st.practiceRuns[key] ?? 0) + 1 },
       }));
       return report;

@@ -15,6 +15,8 @@ export interface Inventory {
   parts: OwnedPart[];
   /** รับ starter pack ไปแล้วหรือยัง (ได้ครั้งเดียวต่อกระเป๋า) */
   starterClaimed: boolean;
+  /** เหรียญในเกมของกระเป๋านี้ (เก็บบน chain) */
+  coins: number;
 }
 
 const driverByKey = new Map<string, DriverDef>(drivers.map((d) => [d.id, d]));
@@ -26,7 +28,11 @@ export async function getInventory(provider: BrowserProvider, address: string): 
   // อ่านอย่างเดียว: ฟรี ไม่มี popup (สไลด์ Week 10)
   const contract = contractFor(provider);
   // inventoryOf คืน token ทั้งหมดของกระเป๋าพร้อมค่าสถิติในคำสั่งเดียว (ERC721Enumerable)
-  const [[ids, infos], starterClaimed] = await Promise.all([contract.inventoryOf(address), contract.starterClaimed(address)]).catch(
+  const [[ids, infos], starterClaimed, coins] = await Promise.all([
+    contract.inventoryOf(address),
+    contract.starterClaimed(address),
+    contract.coins(address),
+  ]).catch(
     (e) => {
       // contract เก่า (ไม่มี inventoryOf) หรือ address ผิด chain: บอกเป็นภาษาคน
       if (e?.code === "CALL_EXCEPTION" || e?.code === "BAD_DATA")
@@ -35,7 +41,7 @@ export async function getInventory(provider: BrowserProvider, address: string): 
     },
   );
 
-  const out: Inventory = { drivers: [], parts: [], starterClaimed };
+  const out: Inventory = { drivers: [], parts: [], starterClaimed, coins: Number(coins) };
   const seen = new Set<string>();
   ids.forEach((rawId: bigint, i: number) => {
     const t = infos[i];
@@ -61,10 +67,6 @@ export async function ethBalance(provider: BrowserProvider, address: string): Pr
   return (+formatEther(await provider.getBalance(address))).toFixed(4);
 }
 
-/** ราคาบน chain เป็น ETH เช่น "0.003" */
-export async function priceOf(provider: BrowserProvider, key: string): Promise<string> {
-  return formatEther(await contractFor(provider).priceOf(key));
-}
 
 // ---------- เขียน: ต้องเซ็นใน MetaMask และเสียค่า gas ----------
 /** kind: 0 speed, 1 corner, 2 brake */
@@ -73,9 +75,23 @@ export async function claimStarter(signer: JsonRpcSigner, driverKey: string, kin
   await tx.wait();
 }
 
-export async function buy(signer: JsonRpcSigner, provider: BrowserProvider, key: string, isDriver: boolean): Promise<void> {
+/** ซื้อ NFT ด้วยเหรียญ (ไม่ส่ง ETH) */
+export async function buy(signer: JsonRpcSigner, key: string, isDriver: boolean): Promise<void> {
   const c = contractFor(signer);
-  const value = await contractFor(provider).priceOf(key);
-  const tx = isDriver ? await c.buyDriver(key, { value }) : await c.buyPart(key, { value });
+  const tx = isDriver ? await c.buyDriver(key) : await c.buyPart(key);
+  await tx.wait();
+}
+
+/** แลก ETH เป็นเหรียญ: จ่าย coins × COIN wei ตามอัตราใน contract */
+export async function buyCoins(signer: JsonRpcSigner, coins: number): Promise<void> {
+  const c = contractFor(signer);
+  const rate: bigint = await c.COIN();
+  const tx = await c.buyCoins({ value: rate * BigInt(coins) });
+  await tx.wait();
+}
+
+/** ใช้เหรียญกับของในเกม (ยาง, ซ่อม, practice): contract หักเหรียญแล้วเผาทิ้ง */
+export async function spendCoins(signer: JsonRpcSigner, coins: number, item: string): Promise<void> {
+  const tx = await contractFor(signer).spendCoins(coins, item);
   await tx.wait();
 }

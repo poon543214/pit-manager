@@ -50,8 +50,10 @@ export interface GameService {
   refreshWallet(): Promise<number>;
   /** One free starter pack per wallet: a driver plus one part per slot of a kind (0 speed, 1 corner, 2 brake). */
   claimStarter(driverId: string, kind: number): Promise<void>;
-  /** Price on chain in ETH, e.g. "0.003". */
-  priceEth(id: string): Promise<string>;
+  /** Exchange ETH for game coins on chain (1 coin = 0.00001 ETH). */
+  buyCoins(coins: number): Promise<void>;
+  /** Local chain only: add free test ETH to the connected wallet. */
+  topUpTestEth(): Promise<void>;
   /** Post a finished race's points and record hash to the on-chain season. */
   postRace(result: RaceResult): Promise<void>;
   /** Collect won season prizes as ETH. */
