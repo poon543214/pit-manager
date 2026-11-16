@@ -149,9 +149,21 @@ img.pixel { image-rendering: pixelated; display: block; }
 
 /* ---------- market ---------- */
 .parts-table { display: grid; gap: 12px; }
-.parts-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; align-items: stretch; }
-@media (max-width: 1180px) { .parts-row { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.slot-name { grid-column: 1 / -1; font-family: var(--pixel); font-size: 10px; margin-top: 4px; }
+.parts-row { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; align-items: stretch; }
+/* three cards fill the row; extra versions of a type scroll in from the right */
+.parts-track {
+  display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 24px) / 3); gap: 12px;
+  overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; padding-bottom: 8px;
+  scrollbar-color: var(--red) rgba(255,255,255,.12); scrollbar-width: thin;
+}
+.parts-track > * { scroll-snap-align: start; }
+.parts-track:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+.parts-track::-webkit-scrollbar { height: 6px; }
+.parts-track::-webkit-scrollbar-track { background: rgba(255,255,255,.12); }
+.parts-track::-webkit-scrollbar-thumb { background: var(--red); }
+.slot-name { font-family: var(--pixel); font-size: 10px; align-self: center; display: flex; flex-direction: column; gap: 6px; }
+.track-more { align-self: flex-start; padding: 4px 8px; font: 700 12px var(--text); color: var(--white); background: rgba(17,17,17,.6); border: 1px dashed rgba(255,255,255,.6); cursor: pointer; }
+.track-more:hover { background: var(--red); border-style: solid; border-color: var(--red); }
 .tire-shop { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 @media (max-width: 860px) { .tire-shop { grid-template-columns: 1fr; } }
 .part-card { display: flex; align-items: center; gap: 12px; padding: 10px; }
@@ -163,6 +175,7 @@ img.pixel { image-rendering: pixelated; display: block; }
 
 @media (max-width: 860px) {
   .parts-row { grid-template-columns: 1fr; }
+  .parts-track { grid-auto-columns: 85%; }
 }
 
 /* ---------- garage ---------- */
@@ -809,7 +822,10 @@ button:disabled.driver-row, button:disabled.chip, .cb-callout:disabled { opacity
 .tag.variant { color: var(--white); background: transparent; outline: 1px dashed rgba(255,255,255,.7); padding: 0 3px; }
 
 /* Market part card: head, stat chips, price at the bottom */
-.shop-part { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
+.shop-part { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'head foot' 'stats stats'; align-content: start; gap: 10px; padding: 12px; }
+.shop-part .sp-head { grid-area: head; }
+.shop-part .sp-stats { grid-area: stats; }
+.shop-part .sp-foot { grid-area: foot; }
 .sp-head { display: flex; align-items: center; gap: 10px; min-height: 52px; }
 .sp-head .pixel { flex: none; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); }
 .sp-title { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 14px; }
@@ -818,5 +834,5 @@ button:disabled.driver-row, button:disabled.chip, .cb-callout:disabled { opacity
 .sp-stats div.trait { border-style: dashed; border-color: rgba(255,255,255,.4); }
 .sp-stats dt { font-family: var(--pixel); font-size: 8px; color: rgba(255,255,255,.7); }
 .sp-stats dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
-.sp-foot { margin-top: auto; display: flex; justify-content: flex-end; align-items: center; min-height: 36px; }
+.sp-foot { display: flex; justify-content: flex-end; align-items: flex-start; }
 .sp-foot .owned { padding: 0; }

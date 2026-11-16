@@ -1,20 +1,20 @@
 [
   {"id": "engine_speed", "perk": "overboost", "slot": "engine", "kind": "speed", "name": "Sprint V6", "speed": 3, "corner": 1, "brake": 1, "price": 120, "tire": 0, "wet": 0, "rel": 0},
-  {"id": "engine_endurance", "perk": "long-life", "slot": "engine", "kind": "speed", "variant": "endurance", "name": "Endurance V6", "speed": 2, "corner": 1, "brake": 1, "price": 130, "tire": 3, "wet": 0, "rel": 2},
   {"id": "engine_corner", "perk": "smooth-torque", "slot": "engine", "kind": "corner", "name": "Torque V6", "speed": 1, "corner": 3, "brake": 1, "price": 120, "tire": 0, "wet": 0, "rel": 0},
-  {"id": "engine_rain", "perk": "spray-proof", "slot": "engine", "kind": "corner", "variant": "rain", "name": "Rain-map V6", "speed": 1, "corner": 2, "brake": 1, "price": 130, "tire": 0, "wet": 3, "rel": 1},
   {"id": "engine_brake", "perk": "safe-map", "slot": "engine", "kind": "brake", "name": "Safe-map V6", "speed": 1, "corner": 1, "brake": 3, "price": 120, "tire": 0, "wet": 0, "rel": 0},
+  {"id": "engine_endurance", "perk": "long-life", "slot": "engine", "kind": "speed", "variant": "endurance", "name": "Endurance V6", "speed": 2, "corner": 1, "brake": 1, "price": 130, "tire": 3, "wet": 0, "rel": 2},
+  {"id": "engine_rain", "perk": "spray-proof", "slot": "engine", "kind": "corner", "variant": "rain", "name": "Rain-map V6", "speed": 1, "corner": 2, "brake": 1, "price": 130, "tire": 0, "wet": 3, "rel": 1},
   {"id": "aero_speed", "perk": "slipstream", "slot": "aero", "kind": "speed", "name": "Low-drag wing", "speed": 3, "corner": 1, "brake": 1, "price": 120, "tire": 0, "wet": 0, "rel": 0},
   {"id": "aero_corner", "perk": "tyre-saver", "slot": "aero", "kind": "corner", "name": "Downforce wing", "speed": 1, "corner": 3, "brake": 1, "price": 120, "tire": 0, "wet": 0, "rel": 0},
+  {"id": "aero_brake", "perk": "stable-rear", "slot": "aero", "kind": "brake", "name": "Airbrake wing", "speed": 1, "corner": 1, "brake": 3, "price": 120, "tire": 0, "wet": 0, "rel": 0},
   {"id": "aero_endurance", "perk": "long-run", "slot": "aero", "kind": "corner", "variant": "endurance", "name": "Durable wing", "speed": 1, "corner": 2, "brake": 1, "price": 130, "tire": 3, "wet": 0, "rel": 2},
   {"id": "aero_rain", "perk": "rain-wing", "slot": "aero", "kind": "corner", "variant": "rain", "name": "Rain wing", "speed": 1, "corner": 2, "brake": 1, "price": 130, "tire": 0, "wet": 3, "rel": 1},
-  {"id": "aero_brake", "perk": "stable-rear", "slot": "aero", "kind": "brake", "name": "Airbrake wing", "speed": 1, "corner": 1, "brake": 3, "price": 120, "tire": 0, "wet": 0, "rel": 0},
   {"id": "gearbox_speed", "perk": "push-mode", "slot": "gearbox", "kind": "speed", "name": "Long-ratio box", "speed": 3, "corner": 1, "brake": 1, "price": 120, "tire": 0, "wet": 0, "rel": 0},
   {"id": "gearbox_corner", "perk": "out-lap", "slot": "gearbox", "kind": "corner", "name": "Short-ratio box", "speed": 1, "corner": 3, "brake": 1, "price": 120, "tire": 0, "wet": 0, "rel": 0},
   {"id": "gearbox_brake", "perk": "wet-brake", "slot": "gearbox", "kind": "brake", "name": "Engine-brake box", "speed": 1, "corner": 1, "brake": 3, "price": 120, "tire": 0, "wet": 0, "rel": 0},
   {"id": "gearbox_rain", "perk": "soft-shift", "slot": "gearbox", "kind": "brake", "variant": "rain", "name": "Smooth-shift box", "speed": 1, "corner": 1, "brake": 2, "price": 130, "tire": 0, "wet": 3, "rel": 1},
   {"id": "suspension_speed", "perk": "fresh-rubber", "slot": "suspension", "kind": "speed", "name": "Stiff-low", "speed": 3, "corner": 1, "brake": 1, "price": 120, "tire": 0, "wet": 0, "rel": 0},
   {"id": "suspension_corner", "perk": "compliant", "slot": "suspension", "kind": "corner", "name": "Soft-flex", "speed": 1, "corner": 3, "brake": 1, "price": 120, "tire": 0, "wet": 0, "rel": 0},
-  {"id": "suspension_endurance", "perk": "kerb-proof", "slot": "suspension", "kind": "corner", "variant": "endurance", "name": "Kerb-proof", "speed": 1, "corner": 2, "brake": 1, "price": 130, "tire": 3, "wet": 0, "rel": 2},
-  {"id": "suspension_brake", "perk": "quick-jack", "slot": "suspension", "kind": "brake", "name": "Dive-control", "speed": 1, "corner": 1, "brake": 3, "price": 120, "tire": 0, "wet": 0, "rel": 0}
+  {"id": "suspension_brake", "perk": "quick-jack", "slot": "suspension", "kind": "brake", "name": "Dive-control", "speed": 1, "corner": 1, "brake": 3, "price": 120, "tire": 0, "wet": 0, "rel": 0},
+  {"id": "suspension_endurance", "perk": "kerb-proof", "slot": "suspension", "kind": "corner", "variant": "endurance", "name": "Kerb-proof", "speed": 1, "corner": 2, "brake": 1, "price": 130, "tire": 3, "wet": 0, "rel": 2}
 ]

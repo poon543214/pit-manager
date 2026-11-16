@@ -80,7 +80,24 @@ export function Market() {
         <div className="parts-table">
           {SLOTS.map((slot) => (
             <div className="parts-row" key={slot}>
-              <div className="slot-name">{SLOT_LABEL[slot]}</div>
+              <div className="slot-name">
+                {SLOT_LABEL[slot]}
+                {PARTS.filter((p) => p.slot === slot && p.variant).length > 0 && (
+                  <button
+                    type="button"
+                    className="track-more"
+                    onClick={(e) => {
+                      const track = e.currentTarget.closest('.parts-row')?.querySelector('.parts-track');
+                      if (!track) return;
+                      const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
+                      track.scrollTo({ left: atEnd ? 0 : track.scrollWidth, behavior: 'smooth' });
+                    }}
+                  >
+                    +{PARTS.filter((p) => p.slot === slot && p.variant).length} versions →
+                  </button>
+                )}
+              </div>
+              <div className="parts-track" tabIndex={0} aria-label={`${SLOT_LABEL[slot]} parts`}>
               {PARTS.filter((p) => p.slot === slot).map((p) => {
                 const owned = state.ownedParts.includes(p.id);
                 return (
@@ -144,6 +161,7 @@ export function Market() {
                   </div>
                 );
               })}
+              </div>
             </div>
           ))}
         </div>
