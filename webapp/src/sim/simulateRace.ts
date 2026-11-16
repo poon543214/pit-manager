@@ -27,8 +27,24 @@ export const RACE_TOLL = 18;
 export const TOLL_PER_POINT = 2;
 export const REST = 25;
 
-/** Condition lost by racing this driver once. */
-export const raceToll = (consistency: number) => RACE_TOLL + (10 - consistency) * TOLL_PER_POINT;
+/** Part traits (endurance and rain parts): tire wear saved, wet seconds saved and mistakes avoided per point. */
+export const TIRE_CARE = 0.05;
+export const WET_GRIP = 0.12;
+export const RELIABILITY = 0.05;
+/** Durability a fitted part loses per race, less for each point of reliability on the car. */
+export const REL_WEAR = 0.06;
+
+/** Condition lost by racing this driver once; `mult` comes from perks like Iron Man. */
+export const raceToll = (consistency: number, mult = 1) => Math.round((RACE_TOLL + (10 - consistency) * TOLL_PER_POINT) * mult);
+
+/** Multiplier from the car's tire-care points: each point makes tires wear 5% slower, down to 60%. */
+export const traitWear = (e: Pick<Entrant, 'stats'>) => Math.max(0.6, 1 - TIRE_CARE * (e.stats.tire ?? 0));
+/** Multiplier on mistakes and scatter from reliability. */
+export const traitSteady = (e: Pick<Entrant, 'stats'>) => Math.max(0.4, 1 - RELIABILITY * (e.stats.rel ?? 0));
+
+/** Product of one perk multiplier (fatigue, toll, partWear) across an entrant's perks. */
+export const perkMult = (perks: string[] | undefined, on: 'fatigue' | 'toll' | 'partWear') =>
+  (perks ?? []).reduce((m, id) => m * (PERKS[id]?.effects ?? []).reduce((k, f) => (f.on === on ? k * f.mult : k), 1), 1);
 
 /** Effective tyre age: laps run, scaled by how hard this track and weather are on tyres. */
 export const tireStress = (track: Track, weather: Weather) => track.tireWear * (weather === 'wet' ? WET_WEAR : 1);
@@ -70,30 +86,35 @@ export function lapDetail(e: Entrant, track: Track, weather: Weather, tireAge: n
   const car = carFit(e.stats, track, weather) * CAR_GAIN;
   const pace = driverFit(e.driver, weather) * DRIVER_GAIN;
   const rain = wet ? WET_PENALTY * (1 - e.driver.wet / 10) : 0;
-  t -= car;
+  // rain parts: wet grip takes time off every wet lap
+  const grip = wet ? WET_GRIP * (e.stats.wet ?? 0) : 0;
+  t -= car + grip;
   t -= pace;
   if (wet) t += rain;
 
   // fatigue: builds through the race (less for a consistent driver), worse for a driver who came in tired
   const tired = 1 - (e.condition ?? 100) / 100;
   const stamina = (11 - e.driver.consistency) / 10;
-  const fatigue = TIRED_PACE * tired + FATIGUE_MAX * stamina * (ctx.lap / ctx.laps) ** 2 * (1 + tired);
+  const fatigue =
+    TIRED_PACE * tired + FATIGUE_MAX * stamina * (ctx.lap / ctx.laps) ** 2 * (1 + tired) * perkMult(e.perks, 'fatigue');
   t += fatigue;
 
   // tyres, with wear and cliff perks credited by how much each one alone would have saved
   const tire = TIRES[ctx.tire ?? e.tire];
   const wears = fx.filter((f) => f.fx.on === 'wear') as { id: string; fx: { on: 'wear'; mult: number } }[];
   const cliffs = fx.filter((f) => f.fx.on === 'cliff') as { id: string; fx: { on: 'cliff'; mult: number } }[];
-  const wearMult = wears.reduce((m, f) => m * f.fx.mult, 1);
+  // tire care from endurance parts is part of the car; perks are credited on top of it
+  const care = traitWear(e);
+  const wearMult = care * wears.reduce((m, f) => m * f.fx.mult, 1);
   const cliffMult = cliffs.reduce((m, f) => m * f.fx.mult, 1);
-  const plain = tireLoss(tire, track, weather, tireAge);
+  const plain = tireLoss(tire, track, weather, tireAge, care);
   const withPerks = tireLoss(tire, track, weather, tireAge, wearMult, cliffMult);
   t += withPerks;
   const saved = plain - withPerks;
   if (saved > 0) {
     const solo = [
-      ...wears.map((f) => ({ id: f.id, v: plain - tireLoss(tire, track, weather, tireAge, f.fx.mult, 1) })),
-      ...cliffs.map((f) => ({ id: f.id, v: plain - tireLoss(tire, track, weather, tireAge, 1, f.fx.mult) })),
+      ...wears.map((f) => ({ id: f.id, v: plain - tireLoss(tire, track, weather, tireAge, care * f.fx.mult, 1) })),
+      ...cliffs.map((f) => ({ id: f.id, v: plain - tireLoss(tire, track, weather, tireAge, care, f.fx.mult) })),
     ];
     const sum = solo.reduce((a, b) => a + b.v, 0);
     for (const x of solo) if (sum > 0) add(x.id, (saved * x.v) / sum);
@@ -108,7 +129,9 @@ export function lapDetail(e: Entrant, track: Track, weather: Weather, tireAge: n
       (f.on === 'wet' && wet) ||
       (f.on === 'dry' && !wet) ||
       (f.on === 'outlap' && ctx.outLap) ||
-      (f.on === 'fresh' && tireAge <= 2);
+      (f.on === 'fresh' && tireAge <= 2) ||
+      (f.on === 'old' && tireAge >= 6) ||
+      (f.on === 'focus' && track.focus === f.kind);
     if (hit && 's' in f) {
       t -= f.s;
       perks -= f.s;
@@ -118,7 +141,7 @@ export function lapDetail(e: Entrant, track: Track, weather: Weather, tireAge: n
 
   // consistency 10 → ±0.15s spread, consistency 1 → ±1.5s; rain makes everyone ragged unless calm
   const calm = fx.some((f) => f.fx.on === 'wetCalm');
-  const scatter = fx.reduce((m, f) => (f.fx.on === 'scatter' ? m * f.fx.mult : m), 1);
+  const scatter = fx.reduce((m, f) => (f.fx.on === 'scatter' ? m * f.fx.mult : m), 1) * traitSteady(e);
   const rainShake = wet && !calm ? 1.6 : 1;
   const spread = (0.15 + (10 - e.driver.consistency) * 0.15) * rainShake * scatter;
   t += noise * spread;
@@ -133,13 +156,13 @@ export function lapDetail(e: Entrant, track: Track, weather: Weather, tireAge: n
     t += MISTAKE_COST;
   }
   // where the lap time came from, for the post-race breakdown; noise and mistakes are left to the caller
-  const parts = { car: -car, driver: rain - pace, fatigue, tires: withPerks, perks };
+  const parts = { car: -car - grip, driver: rain - pace, fatigue, tires: withPerks, perks };
   return { time: t, gains, mistake, parts };
 }
 
 /** Laps an entrant's tyres last before the cliff, counting wear perks. */
 export function tireAgeLimit(e: Entrant, track: Track, weather: Weather, tire: TireId = e.tire): number {
-  const wearMult = effectsOf(e).reduce((m, f) => (f.fx.on === 'wear' ? m * f.fx.mult : m), 1);
+  const wearMult = traitWear(e) * effectsOf(e).reduce((m, f) => (f.fx.on === 'wear' ? m * f.fx.mult : m), 1);
   return TIRES[tire].life / (tireStress(track, weather) * wearMult);
 }
 

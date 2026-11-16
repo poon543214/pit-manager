@@ -4,10 +4,10 @@ import { CarBuilder } from '../components/CarBuilder';
 import { PerkIcon } from '../components/PerkIcon';
 import { PERKS } from '../sim/perks';
 import { DriverImg, TireImg } from '../components/Sprites';
-import { StatBar } from '../components/StatBar';
+import { BuildRadar } from '../components/BuildRadar';
+import { buildProfile } from '../shared/buildProfile';
 import { SetupScores } from '../components/SetupScores';
 import { HelpTip } from '../components/HelpTip';
-import { StarterPack } from '../components/StarterPack';
 import { DRIVERS, MAX_STOPS, PARTS, SLOTS, TIRES, byId, repairCost } from '../shared/constants';
 import { carStats, trackWeights } from '../shared/fitScore';
 import { tireLife } from '../sim/simulateRace';
@@ -58,11 +58,7 @@ export function Garage() {
     return (
       <div className="page empty">
         <h2>No driver yet</h2>
-        {state.starterClaimed === false ? (
-          <div className="empty-starter">
-            <StarterPack />
-          </div>
-        ) : isOpen('market') ? (
+        {isOpen('market') ? (
           <>
             <p>Buy a driver in the Market to start setting up your car.</p>
             <Button onClick={() => go('market')}>Go to Market</Button>
@@ -120,9 +116,7 @@ export function Garage() {
                 <strong className="name-with-perk">
                   {d.name} <PerkIcon id={d.perk} size={12} inButton />
                 </strong>
-                <span className="mini-stats">
-                  PACE {d.pace} · CONS {d.consistency} · WET {d.wet} · COND {state.driverCondition[d.id] ?? 100}%
-                </span>
+                <span className="mini-stats">Condition {state.driverCondition[d.id] ?? 100}%</span>
               </button>
             ))}
           </div>
@@ -148,11 +142,10 @@ export function Garage() {
         </section>
 
         <section className="g-panel">
-          <h2>Car stats</h2>
-          <div className="card">
-            <StatBar label="SPD" value={Math.round(stats.speed)} max={13} tone="red" />
-            <StatBar label="CRN" value={Math.round(stats.corner)} max={13} tone="white" />
-            <StatBar label="BRK" value={Math.round(stats.brake)} max={13} tone="black" />
+          <h2>Build</h2>
+          <div className="card build-card">
+            <BuildRadar profile={buildProfile(stats, driver, activePerks.map((p) => p.id))} />
+            <p className="muted build-note">Driver, parts and skills together, each axis 0–10.</p>
           </div>
           {fitted.length > 0 && (
             <ul className="wear-list" aria-label="Part condition">

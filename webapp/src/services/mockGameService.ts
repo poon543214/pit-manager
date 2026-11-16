@@ -24,7 +24,7 @@ import { createRng } from '../shared/rng';
 import type { Entrant, Loadout, PlayerState, RaceResult, TireId, Track, Weather } from '../shared/types';
 import { practice } from '../sim/practice';
 import { projectedTotal, simulateRace } from '../sim/simulateRace';
-import { buy, buyCoins, claimStarter, ethBalance, getInventory, spendCoins } from '../chain/chainInventory';
+import { buy, buyCoins, ethBalance, getInventory, spendCoins } from '../chain/chainInventory';
 import { CONTRACT_ADDRESS } from '../chain/config';
 import { claimPrize, getSeason, submitRace } from '../chain/season';
 import { connectWallet, onWalletChange, reconnectWallet, topUpTestEth, type WalletSession } from '../chain/wallet';
@@ -76,6 +76,7 @@ function candidatePlans(laps: number): Pick<Entrant, 'tire' | 'stops'>[] {
 type Style = 'aggressive' | 'saver' | 'gambler' | 'balanced';
 const STYLES: Record<string, Style> = {
   charles: 'aggressive', kimi: 'saver', max: 'balanced', oscar: 'saver', fernando: 'gambler',
+  rafa: 'aggressive', mila: 'saver', jonah: 'gambler',
   nova: 'balanced', theo: 'aggressive', aiko: 'saver', leo: 'aggressive', sana: 'gambler', finn: 'balanced',
 };
 /** perStop: seconds a team pretends a stop costs or saves; perLap: per-lap liking (negative) or dislike of a compound; hunch: noise. */
@@ -173,7 +174,6 @@ export function createMockGameService(): GameService {
       wallet: s0.address,
       // with a wallet, coins are the on-chain balance
       coins: inv.coins,
-      starterClaimed: inv.starterClaimed,
       ethBalance: eth,
       chainSeason,
       ownedDrivers: drivers,
@@ -186,9 +186,9 @@ export function createMockGameService(): GameService {
     session = null;
     applyCatalogStats(null);
     store.update((st) => {
-      if (!st.mockOwned) return { ...st, wallet: null, starterClaimed: null, ethBalance: null, chainSeason: null };
+      if (!st.mockOwned) return { ...st, wallet: null, ethBalance: null, chainSeason: null };
       const { drivers, parts, coins = st.coins } = st.mockOwned;
-      return { ...st, coins, wallet: null, starterClaimed: null, ethBalance: null, chainSeason: null, mockOwned: null, ownedDrivers: drivers, ownedParts: parts, loadout: prune(st.loadout, drivers, parts) };
+      return { ...st, coins, wallet: null, ethBalance: null, chainSeason: null, mockOwned: null, ownedDrivers: drivers, ownedParts: parts, loadout: prune(st.loadout, drivers, parts) };
     });
   };
 
@@ -277,13 +277,6 @@ export function createMockGameService(): GameService {
     async topUpTestEth() {
       if (!session) throw new Error('Connect your wallet first.');
       await topUpTestEth(session.address);
-      await syncWallet();
-    },
-
-    async claimStarter(driverId, kind) {
-      if (!session) throw new Error('Connect your wallet first.');
-      if (store.get().starterClaimed) throw new Error('This wallet has already claimed its starter pack.');
-      await claimStarter(session.signer, driverId, kind);
       await syncWallet();
     },
 

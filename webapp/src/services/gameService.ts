@@ -48,8 +48,6 @@ export interface GameService {
   connectWallet(): Promise<string>;
   /** Re-read the wallet's NFTs (after a transfer, say). Returns how many it owns. */
   refreshWallet(): Promise<number>;
-  /** One free starter pack per wallet: a driver plus one part per slot of a kind (0 speed, 1 corner, 2 brake). */
-  claimStarter(driverId: string, kind: number): Promise<void>;
   /** Exchange ETH for game coins on chain (1 coin = 0.00001 ETH). */
   buyCoins(coins: number): Promise<void>;
   /** Local chain only: add free test ETH to the connected wallet. */

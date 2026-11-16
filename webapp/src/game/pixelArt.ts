@@ -184,7 +184,7 @@ export function driverSprite(id: string, look: { skin: string; hair: string; hai
   });
 }
 
-const ACCENT: Record<PartKind, string> = { speed: red, corner: white, brake: black };
+const ACCENT: Record<PartKind, string> = { speed: red, corner: white, brake: black, endurance: grey, rain: white };
 
 export function partSprite(slot: Slot, kind: PartKind): string {
   return memo(`part:${slot}:${kind}`, () => {

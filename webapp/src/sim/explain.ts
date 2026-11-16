@@ -1,7 +1,7 @@
 import { TIRES } from '../shared/constants';
 import { trackWeights } from '../shared/fitScore';
 import { planText } from '../shared/plan';
-import type { CarStats, PartKind, RaceEntryResult, TireId, Track, Weather } from '../shared/types';
+import type { CarStats, StatKind, RaceEntryResult, TireId, Track, Weather } from '../shared/types';
 import { PERKS } from './perks';
 import { MISTAKE_COST, lapDetail, tireLaps } from './simulateRace';
 
@@ -54,13 +54,13 @@ export function stints(entry: RaceEntryResult): { tire: TireId; laps: number }[]
 }
 
 /** The kind of part the car leans on most. */
-export const strongest = (s: CarStats): PartKind =>
+export const strongest = (s: CarStats): StatKind =>
   s.speed >= s.corner && s.speed >= s.brake ? 'speed' : s.corner >= s.brake ? 'corner' : 'brake';
 
 /** The kind of part this track rewards most in this weather. */
-export function trackWants(track: Track, weather: Weather): PartKind {
+export function trackWants(track: Track, weather: Weather): StatKind {
   const w = trackWeights(track, weather);
-  return (Object.keys(w) as PartKind[]).reduce((x, k) => (w[k] > w[x] ? k : x));
+  return (Object.keys(w) as StatKind[]).reduce((x, k) => (w[k] > w[x] ? k : x));
 }
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 

@@ -35,13 +35,13 @@ straight from the node. No private key is imported anywhere.
 
 - `buyCoins()` (payable): ETH → coins at `COIN` = 0.00001 ETH per coin (send a whole number of coins).
   30% of the ETH goes into `seasonPool`, 70% to `ownerFunds`.
-- `coins(address)`: a wallet's balance. `claimStarter` also gives `STARTER_COINS` = 200.
+- `coins(address)`: a wallet's balance. There is no free starter pack: a new wallet starts with nothing.
 - `buyDriver(key)` / `buyPart(key)`: pay `priceOf(key)` coins; one of each type per wallet.
 - `spendCoins(amount, item)`: tire sets, repairs and practice. Spent coins are burned. Coins never turn back into ETH.
 
 ## NFTs
 
-- `claimStarter(driverKey, kind)`: one free pack per wallet (driver + one part per slot; kind 0 speed, 1 corner, 2 brake)
+- Catalog: 8 drivers and 20 parts (4 slots × speed, corner, brake, endurance, rain). Tire care, wet grip, reliability and perks live in the game's JSON, linked by key.
 - `inventoryOf(address)`: every token a wallet holds with its stats (what the game reads)
 - `setBaseURI` / `withdraw` / `voidRace` / `endSeason`: owner only. `tokenURI(id)` = baseURI + key + `.json`
 

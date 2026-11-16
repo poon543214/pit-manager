@@ -1,5 +1,5 @@
 import { setsNeeded } from '../shared/plan';
-import { REST, raceToll } from '../sim/simulateRace';
+import { REL_WEAR, REST, perkMult, raceToll } from '../sim/simulateRace';
 import { PART_WEAR, SEASON_PAYOUT, SEASON_ROUNDS, SEASON_SPONSOR, WET_PART_WEAR } from '../shared/constants';
 import type { Loadout, PlayerState, RaceResult } from '../shared/types';
 import type { MockStore } from './mockStore';
@@ -12,6 +12,9 @@ import type { MockStore } from './mockStore';
 export function settleRace(store: MockStore, result: RaceResult, parts: Loadout['parts']) {
   const me = result.entries.find((e) => e.entrant.isPlayer);
   if (!me) return;
+  // reliability points and wear perks slow how fast the fitted parts wear
+  const wearRate = Math.max(0.3, 1 - REL_WEAR * (me.entrant.stats.rel ?? 0)) * perkMult(me.entrant.perks, 'partWear');
+  const lost = Math.round((PART_WEAR + (result.weather === 'wet' ? WET_PART_WEAR : 0)) * wearRate);
   store.update((s) => ({
     ...s,
     commit: null,
@@ -20,7 +23,7 @@ export function settleRace(store: MockStore, result: RaceResult, parts: Loadout[
       ...s.partWear,
       ...Object.fromEntries(
         Object.values(parts).flatMap((id) =>
-          id ? [[id, Math.max(0, (s.partWear[id] ?? 100) - PART_WEAR - (result.weather === 'wet' ? WET_PART_WEAR : 0))]] : [],
+          id ? [[id, Math.max(0, (s.partWear[id] ?? 100) - lost)]] : [],
         ),
       ),
     },
@@ -33,7 +36,7 @@ export function settleRace(store: MockStore, result: RaceResult, parts: Loadout[
     driverCondition: Object.fromEntries(
       s.ownedDrivers.map((id) => {
         const now = s.driverCondition[id] ?? 100;
-        return [id, id === me.entrant.driver.id ? Math.max(0, now - raceToll(me.entrant.driver.consistency)) : Math.min(100, now + REST)];
+        return [id, id === me.entrant.driver.id ? Math.max(0, now - raceToll(me.entrant.driver.consistency, perkMult(me.entrant.perks, 'toll'))) : Math.min(100, now + REST)];
       }),
     ),
     history: [...s.history, { trackId: result.trackId, position: me.position, points: me.points, at: Date.now() }],

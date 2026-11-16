@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 ///
 /// The catalog holds 5 driver types and 12 part types, each with a `key` that matches the
 /// "id" in the game's drivers.json / parts.json. Any number of tokens can be minted per type:
-/// every new wallet claims one free starter pack, and anything else is bought with game coins.
+/// every driver and part is bought with game coins.
 /// Stats live on-chain; look, name and perk stay in the game's JSON, linked by `key`.
 ///
 /// Coins: the game's one currency, kept as a balance here. ETH buys coins (buyCoins); coins buy NFTs
@@ -53,10 +53,8 @@ contract PitWallNFT is ERC721Enumerable {
 
     /// Exchange rate: 1 game coin = 0.00001 ETH (1,000 coins = 0.01 ETH).
     uint256 public constant COIN = 0.00001 ether;
-    /// Coins that come with the starter pack, for the first tire sets and repairs.
-    uint256 public constant STARTER_COINS = 200;
-    uint8 public constant DRIVER_TYPES = 5;
-    uint8 public constant PART_TYPES = 12;
+    uint8 public constant DRIVER_TYPES = 8;
+    uint8 public constant PART_TYPES = 20;
 
     DriverType[] private _driverTypes;
     PartType[] private _partTypes;
@@ -69,7 +67,6 @@ contract PitWallNFT is ERC721Enumerable {
     mapping(uint256 => uint256) private _typeOf; // token id => catalog index
     /// how many tokens of a type (keccak(key)) an address holds, so nobody buys a duplicate
     mapping(address => mapping(bytes32 => uint256)) public held;
-    mapping(address => bool) public starterClaimed;
     /// game coins per wallet
     mapping(address => uint256) public coins;
 
@@ -95,7 +92,6 @@ contract PitWallNFT is ERC721Enumerable {
     mapping(uint256 => mapping(address => mapping(uint256 => uint256))) public pointsAt; // season => player => round => points
     mapping(uint256 => mapping(address => mapping(uint256 => bytes32))) public recordAt;
 
-    event StarterClaimed(address indexed player, string driverKey, uint8 kind);
     event CoinsBought(address indexed player, uint256 coins, uint256 paid);
     event CoinsSpent(address indexed player, uint256 coins, string item);
     event RaceSubmitted(uint256 indexed season, address indexed player, uint256 round, uint256 points, bytes32 record);
@@ -111,42 +107,48 @@ contract PitWallNFT is ERC721Enumerable {
     constructor() ERC721("Pit Wall NFT", "PIT") {
         owner = msg.sender;
 
-        // prices in coins
+        // prices in coins; keys, stats and prices mirror webapp/src/data/*.json (a test checks it)
         _addDriver("charles", 9, 5, 6, 300);
         _addDriver("kimi", 8, 5, 7, 280);
         _addDriver("max", 7, 8, 5, 260);
         _addDriver("oscar", 6, 9, 5, 240);
         _addDriver("fernando", 5, 6, 9, 220);
+        _addDriver("rafa", 8, 7, 5, 270);
+        _addDriver("mila", 6, 7, 7, 230);
+        _addDriver("jonah", 7, 6, 7, 250);
 
-        string[4] memory slotNames = ["engine", "aero", "gearbox", "suspension"];
-        string[3] memory kindNames = ["speed", "corner", "brake"];
-        // kind 0 = speed (3/1/1), 1 = corner (1/3/1), 2 = brake (1/1/3); part index = slot*3 + kind
-        for (uint8 s = 0; s < 4; s++) {
-            for (uint8 k = 0; k < 3; k++) {
-                string memory key = string.concat(slotNames[s], "_", kindNames[k]);
-                _partTypes.push(PartType(key, Slot(s), k == 0 ? 3 : 1, k == 1 ? 3 : 1, k == 2 ? 3 : 1, 120));
-                _partIndex[keccak256(bytes(key))] = _partTypes.length;
-            }
-        }
+        // per slot: speed, corner and brake specialists, an endurance part and a rain part.
+        // Tire care, reliability and wet grip live in the game's JSON with the perk, linked by key.
+        _addPart("engine_speed", Slot.Engine, 3, 1, 1, 120);
+        _addPart("engine_corner", Slot.Engine, 1, 3, 1, 120);
+        _addPart("engine_brake", Slot.Engine, 1, 1, 3, 120);
+        _addPart("engine_endurance", Slot.Engine, 2, 1, 1, 130);
+        _addPart("engine_rain", Slot.Engine, 1, 2, 1, 130);
+        _addPart("aero_speed", Slot.Aero, 3, 1, 1, 120);
+        _addPart("aero_corner", Slot.Aero, 1, 3, 1, 120);
+        _addPart("aero_brake", Slot.Aero, 1, 1, 3, 120);
+        _addPart("aero_endurance", Slot.Aero, 1, 2, 1, 130);
+        _addPart("aero_rain", Slot.Aero, 1, 2, 1, 130);
+        _addPart("gearbox_speed", Slot.Gearbox, 3, 1, 1, 120);
+        _addPart("gearbox_corner", Slot.Gearbox, 1, 3, 1, 120);
+        _addPart("gearbox_brake", Slot.Gearbox, 1, 1, 3, 120);
+        _addPart("gearbox_endurance", Slot.Gearbox, 1, 1, 2, 130);
+        _addPart("gearbox_rain", Slot.Gearbox, 1, 2, 1, 130);
+        _addPart("suspension_speed", Slot.Suspension, 3, 1, 1, 120);
+        _addPart("suspension_corner", Slot.Suspension, 1, 3, 1, 120);
+        _addPart("suspension_brake", Slot.Suspension, 1, 1, 3, 120);
+        _addPart("suspension_endurance", Slot.Suspension, 1, 2, 1, 130);
+        _addPart("suspension_rain", Slot.Suspension, 1, 2, 1, 130);
+    }
+
+    function _addPart(string memory key, Slot slot, uint8 speed, uint8 corner, uint8 brake, uint256 price) private {
+        _partTypes.push(PartType(key, slot, speed, corner, brake, price));
+        _partIndex[keccak256(bytes(key))] = _partTypes.length;
     }
 
     function _addDriver(string memory key, uint8 pace, uint8 consistency, uint8 wetSkill, uint256 price) private {
         _driverTypes.push(DriverType(key, pace, consistency, wetSkill, price));
         _driverIndex[keccak256(bytes(key))] = _driverTypes.length;
-    }
-
-    // ---------- getting NFTs ----------
-    /// One free starter pack per wallet: the chosen driver, one part per slot of the chosen kind, and STARTER_COINS.
-    function claimStarter(string calldata driverKey, uint8 kind) external {
-        require(!starterClaimed[msg.sender], "starter already claimed");
-        require(kind < 3, "kind is 0 speed, 1 corner, 2 brake");
-        starterClaimed[msg.sender] = true;
-        coins[msg.sender] += STARTER_COINS;
-        _mintDriver(msg.sender, _driverAt(driverKey));
-        for (uint256 s = 0; s < 4; s++) {
-            if (held[msg.sender][keccak256(bytes(_partTypes[s * 3 + kind].key))] == 0) _mintPart(msg.sender, s * 3 + kind);
-        }
-        emit StarterClaimed(msg.sender, driverKey, kind);
     }
 
     // ---------- coins ----------

@@ -243,9 +243,7 @@ export function Home() {
             <strong>No driver yet</strong>
             <span>
               {state.wallet
-                ? state.starterClaimed === false
-                  ? 'Claim your free starter pack in the Garage: a driver and four parts as NFTs.'
-                  : 'This wallet holds no driver NFT yet. Buy one in the Market.'
+                ? 'This wallet holds no driver NFT yet. Get coins with +, then buy a driver in the Market.'
                 : 'Connect your wallet to load the drivers and parts you own as NFTs.'}
             </span>
           </div>

@@ -3,13 +3,12 @@ import { Button } from '../components/Button';
 import { DriverCard } from '../components/DriverCard';
 import { PerkIcon } from '../components/PerkIcon';
 import { PartImg, TireImg } from '../components/Sprites';
-import { StarterPack } from '../components/StarterPack';
 import { DRIVERS, PARTS, SLOTS, SLOT_LABEL, TIRES, TIRE_SET_PRICE } from '../shared/constants';
 import { shortAddress } from '../shared/plan';
 import type { TireId } from '../shared/types';
 import { useGame } from '../useGame';
 
-const KIND_LABEL = { speed: 'Speed', corner: 'Corner', brake: 'Brake' } as const;
+const KIND_LABEL = { speed: 'Speed', corner: 'Corner', brake: 'Brake', endurance: 'Endurance', rain: 'Rain' } as const;
 
 export function Market() {
   const { state, service, attempt, notify, go, demo } = useGame();
@@ -28,7 +27,6 @@ export function Market() {
 
   return (
     <div className="page">
-      <StarterPack />
       <section>
         <div className="section-head">
           <h2>Drivers</h2>
@@ -94,6 +92,9 @@ export function Market() {
                       <span className={`tag k-${p.kind}`}>{KIND_LABEL[p.kind]}</span>
                       <span className="mini-stats">
                         SPD {p.speed} · CRN {p.corner} · BRK {p.brake}
+                        {p.tire > 0 && ` · TIRE ${p.tire}`}
+                        {p.wet > 0 && ` · WET ${p.wet}`}
+                        {p.rel > 0 && ` · REL ${p.rel}`}
                       </span>
                     </div>
                     {owned ? (

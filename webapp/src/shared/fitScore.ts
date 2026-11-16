@@ -1,5 +1,5 @@
 import { PARTS, byId } from './constants';
-import type { CarStats, Driver, Loadout, PartKind, Track, Weather } from './types';
+import type { CarStats, Driver, Loadout, StatKind, Track, Weather } from './types';
 
 const BASE_STAT = 1;
 const PER_SLOT_MAIN = 3;
@@ -11,7 +11,7 @@ export const partEfficiency = (durability = 100) => 0.5 + (0.5 * durability) / 1
 
 /** `wear`: durability (0–100) per part id; parts not listed are new. */
 export function carStats(parts: Loadout['parts'], wear: Record<string, number> = {}): CarStats {
-  const s: CarStats = { speed: BASE_STAT, corner: BASE_STAT, brake: BASE_STAT };
+  const s: CarStats = { speed: BASE_STAT, corner: BASE_STAT, brake: BASE_STAT, tire: 0, wet: 0, rel: 0 };
   for (const id of Object.values(parts)) {
     const p = byId(PARTS, id);
     if (!p) continue;
@@ -19,6 +19,9 @@ export function carStats(parts: Loadout['parts'], wear: Record<string, number> =
     s.speed += p.speed * k;
     s.corner += p.corner * k;
     s.brake += p.brake * k;
+    s.tire += (p.tire ?? 0) * k;
+    s.wet += (p.wet ?? 0) * k;
+    s.rel += (p.rel ?? 0) * k;
   }
   return s;
 }
@@ -27,7 +30,7 @@ export function carStats(parts: Loadout['parts'], wear: Record<string, number> =
  * What the circuit rewards today. Rain cuts grip, so top speed is worth half as much
  * and the difference goes to cornering and braking.
  */
-export function trackWeights(track: Track, weather: Weather): Record<PartKind, number> {
+export function trackWeights(track: Track, weather: Weather): Record<StatKind, number> {
   const w = track.weights;
   if (weather === 'dry') return w;
   const shift = w.speed / 2;

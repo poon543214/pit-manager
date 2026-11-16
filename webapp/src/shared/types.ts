@@ -1,6 +1,9 @@
 import type { ChainSeason } from '../chain/season';
 export type Slot = 'engine' | 'aero' | 'gearbox' | 'suspension';
-export type PartKind = 'speed' | 'corner' | 'brake';
+/** The three handling stats a track weighs. */
+export type StatKind = 'speed' | 'corner' | 'brake';
+/** Part families: one per handling stat, plus endurance (tire care, reliability) and rain (wet grip). */
+export type PartKind = StatKind | 'endurance' | 'rain';
 export type TireId = 'soft' | 'medium' | 'hard';
 export type Weather = 'dry' | 'wet';
 
@@ -35,14 +38,20 @@ export interface Part {
   brake: number;
   price: number;
   perk: string;
+  /** tire care: each point makes tires wear slower */
+  tire: number;
+  /** wet grip: each point takes time off every wet lap */
+  wet: number;
+  /** reliability: each point means fewer mistakes and less part wear per race */
+  rel: number;
 }
 
 export interface Track {
   id: string;
   name: string;
-  focus: PartKind;
+  focus: StatKind;
   tiles: string;
-  weights: Record<PartKind, number>;
+  weights: Record<StatKind, number>;
   laps: number;
   /** how hard the circuit is on tyres: 1 = average, higher = tyres reach their cliff sooner */
   tireWear: number;
@@ -69,6 +78,10 @@ export interface CarStats {
   speed: number;
   corner: number;
   brake: number;
+  /** summed part traits (scaled by durability), 0 on a car without endurance or rain parts */
+  tire: number;
+  wet: number;
+  rel: number;
 }
 
 /** Pit after this lap and fit this compound. */
@@ -193,8 +206,6 @@ export interface PlayerState {
   ethBalance: string | null;
   /** the on-chain season (real ETH pool) while a wallet is connected */
   chainSeason: ChainSeason | null;
-  /** whether the connected wallet has used its one free starter pack (null when no wallet) */
-  starterClaimed: boolean | null;
   /** the browser's own drivers and parts, set aside while a wallet supplies them */
   mockOwned: { drivers: string[]; parts: string[]; coins?: number } | null;
   /** finished seasons where you made the top 3; soulbound trophies on chain */

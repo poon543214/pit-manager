@@ -141,6 +141,8 @@ img.pixel { image-rendering: pixelated; display: block; }
 .k-speed { color: var(--white); background: var(--red); padding: 0 3px; }
 .k-corner { color: var(--black); background: var(--white); padding: 0 3px; outline: 1px solid var(--black); }
 .k-brake { color: var(--white); background: var(--black); padding: 0 3px; }
+.k-endurance { color: var(--black); background: var(--grey); padding: 0 3px; }
+.k-rain { color: var(--white); background: var(--black); padding: 0 3px; outline: 1px dashed var(--white); }
 
 .tag { font-family: var(--pixel); font-size: 8px; padding: 3px 5px; width: fit-content; }
 .tag.k-corner { outline: 0; }
@@ -149,8 +151,8 @@ img.pixel { image-rendering: pixelated; display: block; }
 
 /* ---------- market ---------- */
 .parts-table { display: grid; gap: 12px; }
-.parts-row { display: grid; grid-template-columns: 120px repeat(3, 1fr); gap: 12px; align-items: stretch; }
-.slot-name { font-family: var(--pixel); font-size: 10px; align-self: center; }
+.parts-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; align-items: stretch; }
+.slot-name { grid-column: 1 / -1; font-family: var(--pixel); font-size: 10px; margin-top: 4px; }
 .tire-shop { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 @media (max-width: 860px) { .tire-shop { grid-template-columns: 1fr; } }
 .part-card { display: flex; align-items: center; gap: 12px; padding: 10px; }
@@ -243,7 +245,6 @@ img.pixel { image-rendering: pixelated; display: block; }
 .runs-left b { font-family: var(--pixel); font-size: 10px; color: #ff7a73; }
 
 .empty { text-align: center; padding: 60px 0; }
-.empty-starter { max-width: 760px; margin: 20px auto 0; text-align: left; }
 
 /* ---------- timing tables ---------- */
 .timing {
@@ -550,6 +551,8 @@ img.pixel { image-rendering: pixelated; display: block; }
 .cb-kind.k-speed { background: var(--red); }
 .cb-kind.k-corner { background: var(--white); outline: 0; padding: 0; }
 .cb-kind.k-brake { background: var(--black); padding: 0; }
+.cb-kind.k-endurance { background: var(--grey); padding: 0; }
+.cb-kind.k-rain { background: var(--black); padding: 0; outline: 1px dashed var(--white); }
 .cb-pop { position: absolute; z-index: 3; width: 250px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
 .cb-opt {
   display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px;
@@ -761,11 +764,6 @@ button:disabled.driver-row, button:disabled.chip, .cb-callout:disabled { opacity
   color: var(--white); background: rgba(17,17,17,.6); border: 1px solid rgba(255,255,255,.4);
 }
 .wear-fix:disabled { opacity: .6; }
-.starter { padding: 14px; margin-bottom: 18px; display: flex; flex-direction: column; gap: 10px; }
-.starter h2 { margin: 0; font-size: 12px; }
-.starter p { margin: 0; font-size: 14px; }
-.starter-drivers { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; }
-.starter .btn { align-self: flex-start; }
 /* ETH: a small white diamond so it never reads as a game coin */
 .eth-mark { display: inline-block; width: 8px; height: 8px; transform: rotate(45deg); background: var(--white); box-shadow: 0 0 0 1px var(--black); vertical-align: 1px; margin: 0 2px; }
 .wallet-chip { font-family: var(--pixel); font-size: 10px; padding: 4px 6px; border: 1px solid rgba(255,255,255,.4); }
@@ -796,3 +794,16 @@ button:disabled.driver-row, button:disabled.chip, .cb-callout:disabled { opacity
 .exchange-note { margin: 8px 0 0; font-size: 13px; font-weight: 700; }
 .exchange .dialog-actions { flex-wrap: wrap; }
 .exchange-faucet { margin-right: auto; }
+
+/* Garage build hexagon */
+.build-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px; }
+.build-radar { margin: 0; width: 100%; max-width: 300px; }
+.build-radar svg { display: block; width: 100%; height: auto; overflow: visible; }
+.br-grid { fill: none; stroke: rgba(255, 255, 255, .18); stroke-width: 1; }
+.br-grid.outer { stroke: rgba(255, 255, 255, .45); }
+.br-spoke { stroke: rgba(255, 255, 255, .18); stroke-width: 1; }
+.br-shape { fill: rgba(225, 6, 0, .45); stroke: var(--red); stroke-width: 2; stroke-linejoin: round; }
+.br-dot { fill: var(--white); stroke: var(--black); stroke-width: 1; }
+.br-label text { font-family: var(--pixel); font-size: 9px; fill: var(--white); }
+.br-label .br-value { font-family: var(--text); font-size: 12px; font-weight: 700; fill: #ccc; }
+.build-note { margin: 0; font-size: 12px; text-align: center; }

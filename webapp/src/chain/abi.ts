@@ -2,11 +2,9 @@
 // สร้างจาก contracts/artifacts หลัง `npx hardhat compile` ถ้าแก้ contract ให้อัปเดตตรงนี้ด้วย
 export const PIT_WALL_ABI = [
   "function inventoryOf(address who) view returns (uint256[] ids, (bool isDriver, string key, uint8 slot, uint8 a, uint8 b, uint8 c)[] infos)",
-  "function starterClaimed(address) view returns (bool)",
   "function coins(address) view returns (uint256)",
   "function COIN() view returns (uint256)",
   "function priceOf(string key) view returns (uint256)",
-  "function claimStarter(string driverKey, uint8 kind)",
   "function buyCoins() payable",
   "function spendCoins(uint256 amount, string item)",
   "function buyDriver(string key)",

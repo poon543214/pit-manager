@@ -14,7 +14,12 @@ export type PerkEffect =
   | { on: 'wear'; mult: number } // tyre wear multiplier
   | { on: 'cliff'; mult: number } // worn-tyre cliff multiplier
   | { on: 'scatter'; mult: number } // lap-time scatter multiplier
-  | { on: 'wetCalm' }; // rain doesn't add extra scatter
+  | { on: 'wetCalm' } // rain doesn't add extra scatter
+  | { on: 'focus'; kind: 'speed' | 'corner' | 'brake'; s: number } // seconds off every lap at a track of this type
+  | { on: 'old'; s: number } // seconds off laps on tyres six laps old or more
+  | { on: 'fatigue'; mult: number } // in-race fatigue multiplier
+  | { on: 'toll'; mult: number } // condition a race costs, multiplier
+  | { on: 'partWear'; mult: number }; // durability parts lose per race, multiplier
 
 export interface Perk {
   id: string;
@@ -38,22 +43,51 @@ const list: Perk[] = [
     text: 'Wet laps 0.1s faster, and rain never rattles them.',
     effects: [{ on: 'wet', s: 0.1 }, { on: 'wetCalm' }],
   },
+  { id: 'late-braker', name: 'Late Braker', theme: 'steady', text: 'Every lap 0.25s faster at Brake tracks.', effects: [{ on: 'focus', kind: 'brake', s: 0.25 }] },
+  {
+    id: 'iron-man',
+    name: 'Iron Man',
+    theme: 'steady',
+    text: 'Tires out 50% less in a race, and each race costs 40% less condition.',
+    effects: [{ on: 'fatigue', mult: 0.5 }, { on: 'toll', mult: 0.6 }],
+  },
+  {
+    id: 'undercut',
+    name: 'Undercut',
+    theme: 'pit',
+    text: 'Lap after a pit stop 2s faster, and 0.15s faster on tires up to two laps old.',
+    effects: [{ on: 'outlap', s: 2 }, { on: 'fresh', s: 0.15 }],
+  },
   // engines
   { id: 'overboost', name: 'Overboost', theme: 'start', text: 'Opening lap 2s faster.', effects: [{ on: 'lap1', s: 2 }] },
   { id: 'smooth-torque', name: 'Smooth Torque', theme: 'rain', text: 'Wet laps 0.15s faster.', effects: [{ on: 'wet', s: 0.15 }] },
   { id: 'safe-map', name: 'Safe Map', theme: 'steady', text: 'Lap times scatter 30% less.', effects: [{ on: 'scatter', mult: 0.7 }] },
+  { id: 'long-life', name: 'Long Life', theme: 'steady', text: 'Fitted parts wear 40% slower.', effects: [{ on: 'partWear', mult: 0.6 }] },
+  { id: 'spray-proof', name: 'Spray Proof', theme: 'rain', text: 'Wet laps 0.1s faster, and rain never rattles the driver.', effects: [{ on: 'wet', s: 0.1 }, { on: 'wetCalm' }] },
   // aero
   { id: 'slipstream', name: 'Slipstream', theme: 'dry', text: 'Dry laps 0.15s faster.', effects: [{ on: 'dry', s: 0.15 }] },
   { id: 'tyre-saver', name: 'Tyre Saver', theme: 'tyres', text: 'Tires wear 5% slower.', effects: [{ on: 'wear', mult: 0.95 }] },
   { id: 'stable-rear', name: 'Stable Rear', theme: 'tyres', text: 'Worn-tire cliff 20% softer.', effects: [{ on: 'cliff', mult: 0.8 }] },
+  { id: 'long-run', name: 'Long Run', theme: 'tyres', text: '0.2s faster on tires six laps old or more.', effects: [{ on: 'old', s: 0.2 }] },
+  { id: 'rain-wing', name: 'Rain Wing', theme: 'rain', text: 'Wet laps 0.2s faster.', effects: [{ on: 'wet', s: 0.2 }] },
   // gearboxes
   { id: 'push-mode', name: 'Push Mode', theme: 'finish', text: 'Last two laps 1.2s faster each.', effects: [{ on: 'final2', s: 1.2 }] },
   { id: 'out-lap', name: 'Out-lap Launch', theme: 'pit', text: 'Lap after a pit stop 1.2s faster.', effects: [{ on: 'outlap', s: 1.2 }] },
   { id: 'wet-brake', name: 'Wet Brake', theme: 'rain', text: 'Wet laps 0.12s faster.', effects: [{ on: 'wet', s: 0.12 }] },
+  { id: 'cool-box', name: 'Cool Box', theme: 'steady', text: 'Driver tires out 20% less in a race.', effects: [{ on: 'fatigue', mult: 0.8 }] },
+  { id: 'soft-shift', name: 'Soft Shift', theme: 'rain', text: 'Rain never rattles the driver.', effects: [{ on: 'wetCalm' }] },
   // suspension
   { id: 'fresh-rubber', name: 'Fresh Rubber', theme: 'pit', text: '0.3s faster on tires up to two laps old.', effects: [{ on: 'fresh', s: 0.3 }] },
   { id: 'compliant', name: 'Compliant', theme: 'tyres', text: 'Tires wear 3% slower.', effects: [{ on: 'wear', mult: 0.97 }] },
   { id: 'quick-jack', name: 'Quick Jack', theme: 'pit', text: 'Pit stops 1.5s quicker.', effects: [{ on: 'pit', s: 1.5 }] },
+  {
+    id: 'kerb-proof',
+    name: 'Kerb Proof',
+    theme: 'steady',
+    text: 'Fitted parts wear 30% slower, and lap times scatter 10% less.',
+    effects: [{ on: 'partWear', mult: 0.7 }, { on: 'scatter', mult: 0.9 }],
+  },
+  { id: 'rain-damper', name: 'Rain Damper', theme: 'rain', text: 'Wet laps 0.15s faster.', effects: [{ on: 'wet', s: 0.15 }] },
 ];
 
 export const PERKS: Record<string, Perk> = Object.fromEntries(list.map((p) => [p.id, p]));

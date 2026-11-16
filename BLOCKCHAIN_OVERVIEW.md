@@ -34,7 +34,6 @@
 | ความเป็นเจ้าของนักแข่งและชิ้นส่วน | **Chain** (ERC-721) | โอน/ขายได้เหมือน NFT ทั่วไป |
 | ค่าสถิติ (pace, consistency, wet / speed, corner, brake) | **Chain** | เกมใช้ค่าจาก chain ทับค่าใน JSON |
 | ราคา NFT | **Chain** | `priceOf(key)` เป็น wei |
-| starter pack รับแล้วหรือยัง | **Chain** | `starterClaimed` |
 | ยอดเหรียญ (coins) | **Chain** | `coins(address)` แลกจาก ETH ด้วย `buyCoins()` |
 | กองรางวัล, คะแนนฤดูกาล, เงินรอเคลม | **Chain** | ETH (local chain หรือ Sepolia) |
 | hash ของบันทึกเรซแต่ละเรซ | **Chain** | `recordAt[season][player][round]` |
@@ -48,7 +47,7 @@
 
 ### Catalog (ตั้งใน constructor)
 
-**นักแข่ง 5 แบบ** (ค่าสถิติรวม 20 แต้มเท่ากันทุกคน)
+**นักแข่ง 8 แบบ** (ค่าสถิติรวม 20 แต้มเท่ากันทุกคน)
 
 | key | ชื่อ | Pace | Consistency | Wet | ราคา (coin) | เทียบเป็น ETH | Perk |
 |---|---|---|---|---|---|---|---|
@@ -57,14 +56,19 @@
 | `max` | Max Verstappood | 7 | 8 | 5 | 260 | 0.0026 | pit-lane-pro |
 | `oscar` | Oscar Pasta | 6 | 9 | 5 | 240 | 0.0024 | closer |
 | `fernando` | Fernando Aloson | 5 | 6 | 9 | 220 | 0.0022 | rain-dancer |
+| `rafa` | Rafa Quintero | 8 | 7 | 5 | 270 | 0.0027 | late-braker |
+| `mila` | Mila Novak | 6 | 7 | 7 | 230 | 0.0023 | iron-man |
+| `jonah` | Jonah Pike | 7 | 6 | 7 | 250 | 0.0025 | undercut |
 
-**ชิ้นส่วน 12 แบบ** = 4 ช่อง × 3 สาย ราคาชิ้นละ 120 coin (0.0012 ETH)
+**ชิ้นส่วน 20 แบบ** = 4 ช่อง × 5 สาย บน chain เก็บ Speed/Corner/Brake ส่วน trait (Tire care, Wet grip, Reliability) และ perk อยู่ใน JSON ของเกม ผูกด้วย key
 
-| สาย (kind) | Speed | Corner | Brake | ตัวอย่าง key |
-|---|---|---|---|---|
-| 0 Speed | 3 | 1 | 1 | `engine_speed` |
-| 1 Corner | 1 | 3 | 1 | `aero_corner` |
-| 2 Brake | 1 | 1 | 3 | `gearbox_brake` |
+| สาย (kind) | Speed | Corner | Brake | Tire care | Wet grip | Reliability | ราคา (coin) | เหมาะกับ |
+|---|---|---|---|---|---|---|---|---|
+| Speed | 3 | 1 | 1 | 0 | 0 | 0 | 120 | สนาม Speed |
+| Corner | 1 | 3 | 1 | 0 | 0 | 0 | 120 | สนาม Corner |
+| Brake | 1 | 1 | 3 | 0 | 0 | 0 | 120 | สนาม Brake |
+| Endurance | 2/1/1 ต่างกันตามช่อง (รวม 4) | | | 3 | 0 | 2 | 130 | สนามกินยาง, ลดจำนวนพิท, ประหยัดค่าซ่อม |
+| Rain | 1 | 2 | 1 | 0 | 3 | 1 | 130 | วันที่ฝนตก (เดิมพันกับพยากรณ์) |
 
 ช่อง: `engine`, `aero`, `gearbox`, `suspension`
 
@@ -73,7 +77,6 @@
 | ค่า | ค่า | ความหมาย |
 |---|---|---|
 | `COIN` | 0.00001 ETH | อัตราแลก 1 เหรียญ |
-| `STARTER_COINS` | 200 | เหรียญที่ได้พร้อม starter pack |
 | `POOL_BPS` | 3000 | 30% ของ ETH ที่แลกเป็นเหรียญเข้ากองรางวัล |
 | `SHARES` | 5000 / 3000 / 2000 | top 3 ได้ 50 / 30 / 20% |
 | `MAX_POINTS` | 25 | แต้มสูงสุดต่อเรซ (ชนะ) |
@@ -83,7 +86,6 @@
 
 | ฟังก์ชัน | ใครเรียก | จ่ายเงิน | ทำอะไร |
 |---|---|---|---|
-| `claimStarter(driverKey, kind)` | ผู้เล่น | ฟรี (gas) | รับนักแข่ง 1 + ชิ้นส่วน 4 ช่องสายเดียวกัน ครั้งเดียวต่อกระเป๋า |
 | `buyCoins()` | ผู้เล่น | ETH (จำนวนเต็มเหรียญ) | แลก ETH เป็นเหรียญ แบ่ง 30% เข้ากอง 70% ให้ owner |
 | `spendCoins(amount, item)` | ผู้เล่น | เหรียญ | ใช้เหรียญซื้อยาง ซ่อม practice (เหรียญถูกเผา) |
 | `buyDriver(key)` | ผู้เล่น | เหรียญ | mint นักแข่ง ห้ามซื้อซ้ำชนิดที่มีอยู่ |
@@ -105,7 +107,6 @@
 
 ### กฎที่ contract บังคับ (กันโกง)
 
-- รับ starter pack ได้ครั้งเดียวต่อกระเป๋า
 - ถือ NFT ชนิดเดียวกันซ้ำไม่ได้ (เช็กผ่าน mapping `held` ซึ่งอัปเดตทุกครั้งที่ mint/โอน)
 - ซื้อ NFT ต้องมี **เหรียญพอ** และแลกเหรียญต้องส่ง ETH เป็นจำนวนเต็มเหรียญ (เหรียญแลกกลับเป็น ETH ไม่ได้)
 - ส่งผลเรซได้ต้อง **ถือ NFT นักแข่ง** อย่างน้อย 1 ตัว
@@ -119,7 +120,6 @@
 | Event | เกิดเมื่อ |
 |---|---|
 | `Transfer` | mint หรือโอน NFT (มาตรฐาน ERC-721) |
-| `StarterClaimed` | รับ starter pack |
 | `RaceSubmitted` | ส่งผลเรซ |
 | `RaceVoided` | steward ยกเลิกผล |
 | `SeasonEnded` | ปิดฤดูกาล พร้อม top 3 และเงินรางวัล |
@@ -133,7 +133,7 @@
 
 ```
 Home → กด Connect wallet → MetaMask ขออนุญาต → เพิ่ม/สลับเป็น Hardhat Local ให้อัตโนมัติ (ensureNetwork)
-     → อ่านพร้อมกัน: inventoryOf + starterClaimed + coins + ETH balance + seasonInfo
+     → อ่านพร้อมกัน: inventoryOf + coins + ETH balance + seasonInfo
      → แสดง address, coins, ETH มุมขวาบน → เปิดหน้าอื่นได้
 ```
 
@@ -146,12 +146,11 @@ Home → กด Connect wallet → MetaMask ขออนุญาต → เพ�
 
 | ขั้น | ผู้เล่นทำ | บน chain |
 |---|---|---|
-| 1 | เลือกนักแข่ง + สายชิ้นส่วนใน StarterPack | `claimStarter` mint 5 token + 200 เหรียญ |
-| 2 | (local) กด + → **+10 test ETH** | `hardhat_setBalance` ที่ node ไม่ต้อง import บัญชี |
-| 3 | กด + → เลือกจำนวนเหรียญ → Exchange | `buyCoins()` จ่าย ETH: 30% → `seasonPool`, 70% → `ownerFunds` |
-| 4 | ซื้อนักแข่ง/ชิ้นส่วนใน Market ด้วยเหรียญ | `buyDriver` / `buyPart` หักเหรียญ |
-| 5 | ซื้อยาง / ซ่อม / practice (นอก demo mode) | `spendCoins` หักเหรียญ |
-| 6 | เกมอ่านกระเป๋าใหม่ | `inventoryOf` + `coins` → Garage และยอดมุมขวาบนอัปเดต |
+| 1 | (local) กด + → **+10 test ETH** | node โอน ETH จริงจากบัญชีทดสอบ ไม่ต้อง import บัญชี |
+| 2 | กด + → เลือกจำนวนเหรียญ → Exchange | `buyCoins()` จ่าย ETH: 30% → `seasonPool`, 70% → `ownerFunds` |
+| 3 | ซื้อนักแข่ง/ชิ้นส่วนใน Market ด้วยเหรียญ | `buyDriver` / `buyPart` หักเหรียญ |
+| 4 | ซื้อยาง / ซ่อม / practice (นอก demo mode) | `spendCoins` หักเหรียญ |
+| 5 | เกมอ่านกระเป๋าใหม่ | `inventoryOf` + `coins` → Garage และยอดมุมขวาบนอัปเดต |
 
 ### 4.3 แข่งและซีลเซ็ต (commit–reveal)
 
@@ -210,7 +209,7 @@ steward ──► endSeason() ──► claimable[top1..3] = 50 / 30 / 20 % ข�
 | หน้า | ทำอะไร |
 |---|---|
 | **Home** | ต่อกระเป๋า, ดู address / coins / ETH, Refresh NFTs, Disconnect, ปฏิทินสัปดาห์ |
-| **Market** | ซื้อนักแข่ง / ชิ้นส่วน / ยางด้วยเหรียญ, รับ starter pack |
+| **Market** | ซื้อนักแข่ง / ชิ้นส่วน / ยางด้วยเหรียญ |
 | **Garage** | ใส่ชิ้นส่วน 4 ช่อง, ดู Car fit, เลือกยางเริ่ม, วางแผนพิทสูงสุด 2 ครั้ง, ซ่อมชิ้นส่วน, ซีลเซ็ต |
 | **Practice** | วิ่ง 3 รอบเทียบเซ็ต 20 coin/ครั้ง สูงสุด 3 ครั้งต่อนักแข่งต่อสนาม |
 | **Race** | ดูเรซแบบ top-down, pit wall สั่งเข้าพิทระหว่างแข่ง, Skip ได้เฉพาะ demo mode |
@@ -251,16 +250,18 @@ steward ──► endSeason() ──► claimable[top1..3] = 50 / 30 / 20 % ข�
 ### 5.5 ชิ้นส่วนและนักแข่ง
 
 - **Car fit:** ค่าชิ้นส่วนที่ตรงกับน้ำหนักของสนามทำให้รถเร็วขึ้น
-- **Perk:** นักแข่งและชิ้นส่วนมี perk ที่ทำงานเฉพาะสถานการณ์ (start, finish, rain, tires, pit, steady, dry)
-- **ความทน:** ชิ้นส่วนที่ใส่อยู่เสีย 12% ต่อเรซ (ฝนเพิ่ม 4%) ประสิทธิภาพลดลงจนกว่าจะซ่อม
+- **Trait ของชิ้นส่วน:** Tire care (แต้มละ ยางสึกช้าลง 5% สูงสุด 40%), Wet grip (แต้มละ 0.12s/รอบตอนฝน), Reliability (แต้มละ พลาดน้อยลง 5% และชิ้นส่วนสึกช้าลง 6%)
+- **Perk:** นักแข่งและชิ้นส่วนมี perk ที่ทำงานเฉพาะสถานการณ์: ออกตัว, 2 รอบสุดท้าย, ฝน, แห้ง, ประเภทสนาม (Late Braker), ยางใหม่/ยางเก่า (Undercut, Long Run), พิท, ความล้า (Iron Man, Cool Box), การสึกของชิ้นส่วน (Long Life, Kerb Proof)
+- **ความทน:** ชิ้นส่วนที่ใส่อยู่เสีย 12% ต่อเรซ (ฝนเพิ่ม 4%) ลดลงได้ด้วย Reliability และ perk ประสิทธิภาพลดลงจนกว่าจะซ่อม
+- **กราฟ Build 6 เหลี่ยม (Garage):** รวมนักแข่ง + ชิ้นส่วน + perk เป็น 6 แกน 0–10: Speed, Cornering, Braking, Tire care, Wet, Consistency
 - **ค่าซ่อม:** 50% ของราคาชิ้นส่วนต่อ 100% ที่ซ่อมคืน
-- **Balance:** ไม่มีนักแข่ง ชิ้นส่วน หรือแผนยางที่ชนะทุกสนาม (Vitest ตรวจ)
+- **Balance:** ไม่มีแผนยางหรือชุดชิ้นส่วนที่ชนะทุกสนาม: Endurance ชนะที่สนามกินยาง, Rain ชนะตอนฝน, ชุดตรงสนามชนะวันแห้ง (Vitest ตรวจ)
 
 ### 5.6 เศรษฐกิจในเกม (coin)
 
 | รายการ | ค่า |
 |---|---|
-| เหรียญเริ่มต้น (ต่อกระเป๋าแล้ว) | 200 coin จาก starter pack ที่เหลือแลกจาก ETH ด้วยปุ่ม + |
+| เหรียญเริ่มต้น (ต่อกระเป๋าแล้ว) | 0 coin ทุกอย่างแลกจาก ETH ด้วยปุ่ม + |
 | อัตราแลก | 1 coin = 0.00001 ETH (1,000 coin = 0.01 ETH) แลกกลับไม่ได้ |
 | ยาง | 20–30 coin ต่อชุด |
 | ซ่อม | ตามความเสียหาย |
@@ -303,7 +304,7 @@ steward ──► endSeason() ──► claimable[top1..3] = 50 / 30 / 20 % ข�
 | ABI | `webapp/src/chain/abi.ts` | ฟังก์ชันที่เกมเรียก |
 | Config | `webapp/src/chain/config.ts` | address contract, chain, ค่า COIN |
 | Wallet | `webapp/src/chain/wallet.ts` | connect, reconnect, สลับ network |
-| NFT | `webapp/src/chain/chainInventory.ts` | อ่านกระเป๋า, ซื้อ, starter |
+| NFT | `webapp/src/chain/chainInventory.ts` | อ่านกระเป๋า, ซื้อ, แลกเหรียญ |
 | Season | `webapp/src/chain/season.ts` | อ่านฤดูกาล, ส่งผล, เคลม |
 | Service | `webapp/src/services/gameService.ts` | interface เดียวที่หน้าเว็บเรียก |
 | Simulator | `webapp/src/sim/*` | จำลองเรซ, อธิบายผล, verify |
@@ -317,7 +318,7 @@ steward ──► endSeason() ──► claimable[top1..3] = 50 / 30 / 20 % ข�
 
 - **Optimistic:** เรซคำนวณในเบราว์เซอร์ คะแนนที่ส่งถือว่าถูกจนกว่า steward จะตรวจ และ steward ต้องได้บันทึกเรซเต็มจากผู้เล่น
 - **Steward รวมศูนย์:** owner เป็นคนปิดฤดูกาลและ void ผล ต้องเชื่อใจ owner
-- **Sybil:** สร้างหลายกระเป๋าเพื่อรับ starter pack ฟรีได้
+- **Sybil:** ไม่มีของฟรีแล้ว ทุกกระเป๋าต้องจ่าย ETH ซื้อเหรียญก่อนแข่ง จึงสร้างหลายกระเป๋าได้ยากขึ้น แต่ยังทำได้ถ้ายอมจ่าย
 - **แต้มเสมอ:** ใครส่งก่อนชนะ
 - **ที่มาของรางวัล:** คู่แข่งเป็น AI เงินรางวัลจึงมาจาก ETH ที่ผู้เล่นแลกเป็นเหรียญและ sponsor ไม่ได้มาจากผู้เล่นที่แพ้
 - **ข้อมูลนอก chain:** coin, ยาง, ความทน และความล้าอยู่ใน `localStorage` ของเบราว์เซอร์

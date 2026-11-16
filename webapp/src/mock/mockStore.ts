@@ -21,7 +21,6 @@ const fresh = (): PlayerState => ({
   season: { number: 1, points: {}, pool: SEASON_SPONSOR },
   trophies: [],
   wallet: null,
-  starterClaimed: null,
   ethBalance: null,
   chainSeason: null,
   mockOwned: null,

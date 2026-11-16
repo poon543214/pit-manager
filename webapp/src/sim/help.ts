@@ -1,5 +1,5 @@
 import { MAX_STOPS, PART_WEAR, PIT_LOSS, TIRES, WET_PART_WEAR } from '../shared/constants';
-import { CAR_GAIN, CLIFF_CAP, DRIVER_GAIN, FATIGUE_MAX, MISTAKE_COST, REST, TIRED_PACE, WET_PENALTY, raceToll } from './simulateRace';
+import { CAR_GAIN, CLIFF_CAP, DRIVER_GAIN, FATIGUE_MAX, MISTAKE_COST, RELIABILITY, REL_WEAR, REST, TIRE_CARE, TIRED_PACE, WET_GRIP, WET_PENALTY, raceToll } from './simulateRace';
 
 export type HelpTopic = 'driver' | 'car' | 'tires' | 'pit' | 'skills';
 
@@ -24,6 +24,8 @@ export const HELP: Record<HelpTopic, { title: string; lines: string[] }> = {
     title: 'How parts affect the race',
     lines: [
       'Each part adds Speed, Corner or Brake. The track’s “Rewards” line shows how much each one counts here.',
+      `Endurance parts trade some of that for Tire care (each point makes tires wear ${Math.round(TIRE_CARE * 100)}% slower) and Reliability (each point means ${Math.round(RELIABILITY * 100)}% fewer mistakes and ${Math.round(REL_WEAR * 100)}% less part wear).`,
+      `Rain parts carry Wet grip: each point is ${WET_GRIP}s a lap faster in the rain and nothing in the dry.`,
       `A car built exactly for the track is up to ${s1(CAR_GAIN)} a lap faster than a poor fit.`,
       'Rain halves the value of Speed and moves it to Corner and Brake.',
       'Every part also brings a skill (see Skills in play).',
@@ -54,7 +56,7 @@ export const HELP: Record<HelpTopic, { title: string; lines: string[] }> = {
     title: 'How skills affect the race',
     lines: [
       'Your driver and each fitted part bring one skill.',
-      'A skill only fires in its situation: the start, the last two laps, rain, dry laps, tires, or pit stops.',
+      'A skill only fires in its situation: the start, the last two laps, rain, dry laps, one track type, fresh or old tires, pit stops, fatigue, or wear.',
       'After the race, Results shows how much time each skill saved.',
     ],
   },

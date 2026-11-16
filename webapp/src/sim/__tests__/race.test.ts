@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DRIVERS, PARTS, RIVALS, TIRES, TRACKS } from '../../shared/constants';
+import { DRIVERS, PARTS, RIVALS, SLOTS, TIRES, TRACKS } from '../../shared/constants';
 import { carStats } from '../../shared/fitScore';
 import { applyCalls } from '../../shared/plan';
 import { commitHash } from '../../shared/seal';
@@ -90,6 +90,33 @@ describe('balance', () => {
     }
     const dominant = [...gapByPlan.entries()].filter(([, worst]) => worst < 1);
     expect(dominant).toEqual([]);
+  });
+
+  it('every part family is in the best build somewhere, and no family is best everywhere', () => {
+    // builds: all four parts of the track's own kind, or one or two slots swapped to endurance, or a full rain set
+    const pick = (slot: string, kind: string) => PARTS.find((p) => p.slot === slot && p.kind === kind)!.id;
+    const masks = [1, 2, 4, 8, 3, 5, 6, 9, 10, 12];
+    const coarse = (laps: number) => plans(laps).filter((p) => p.stops.every((s) => s.lap % 2 === 0));
+    const winners = new Set<string>();
+    for (const track of TRACKS) {
+      for (const weather of ['dry', 'wet'] as Weather[]) {
+        const builds: [string, Loadout['parts']][] = [
+          [track.focus, Object.fromEntries(SLOTS.map((s) => [s, pick(s, track.focus)]))],
+          ['rain', Object.fromEntries(SLOTS.map((s) => [s, pick(s, 'rain')]))],
+          ...masks.map((m): [string, Loadout['parts']] => [
+            'endurance',
+            Object.fromEntries(SLOTS.map((s, i) => [s, pick(s, m & (1 << i) ? 'endurance' : track.focus)])),
+          ]),
+        ];
+        const timed = builds.map(([family, parts]) => {
+          const base = { ...entrant(2, { tire: 'medium', stops: [] }, true), stats: carStats(parts) };
+          return { family, t: Math.min(...coarse(track.laps).map((p) => projectedTotal({ ...base, ...p }, track, weather))) };
+        });
+        winners.add(timed.reduce((a, b) => (b.t < a.t ? b : a)).family);
+      }
+    }
+    expect([...winners].sort()).toEqual(expect.arrayContaining(['endurance', 'rain']));
+    expect(winners.size).toBeGreaterThanOrEqual(3);
   });
 });
 

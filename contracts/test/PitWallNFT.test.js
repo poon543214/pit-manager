@@ -14,6 +14,12 @@ describe('PitWallNFT', () => {
     nft = await ethers.deployContract('PitWallNFT');
   });
 
+  /** buy enough coins for one driver and buy it */
+  const hire = async (who, key) => {
+    await nft.connect(who).buyCoins({ value: COIN * (await nft.priceOf(key)) });
+    await nft.connect(who).buyDriver(key);
+  };
+
   it("the catalog matches the game's drivers.json and parts.json (keys, stats, prices)", async () => {
     for (let i = 0; i < drivers.length; i++) {
       const d = drivers[i];
@@ -21,7 +27,9 @@ describe('PitWallNFT', () => {
       expect([t.key, Number(t.pace), Number(t.consistency), Number(t.wetSkill)]).to.deep.equal([d.id, d.pace, d.consistency, d.wet]);
       expect(t.price).to.equal(BigInt(d.price));
     }
-    for (let i = 0; i < 12; i++) {
+    expect(await nft.DRIVER_TYPES()).to.equal(BigInt(drivers.length));
+    expect(await nft.PART_TYPES()).to.equal(BigInt(parts.length));
+    for (let i = 0; i < parts.length; i++) {
       const t = await nft.partType(i);
       const p = parts.find((x) => x.id === t.key);
       expect(p, `part ${t.key} in parts.json`).to.exist;
@@ -30,14 +38,10 @@ describe('PitWallNFT', () => {
     }
   });
 
-  it('a new wallet claims one starter pack: the driver and four parts of the kind it picked', async () => {
-    await nft.connect(alice).claimStarter('max', 1);
-    const [ids, infos] = await nft.inventoryOf(alice.address);
-    expect(ids.length).to.equal(5);
-    expect(infos.map((t) => t.key)).to.deep.equal(['max', 'engine_corner', 'aero_corner', 'gearbox_corner', 'suspension_corner']);
-    expect(infos[0].isDriver).to.equal(true);
-    expect(await nft.coins(alice.address)).to.equal(200n);
-    await expect(nft.connect(alice).claimStarter('kimi', 0)).to.be.revertedWith('starter already claimed');
+  it('there is no free starter pack: everything is bought with coins', async () => {
+    expect(nft.claimStarter).to.equal(undefined);
+    expect(await nft.coins(alice.address)).to.equal(0n);
+    expect(await nft.balanceOf(alice.address)).to.equal(0n);
   });
 
   it('ETH buys coins at the fixed rate, 30% of it into the season pool', async () => {
@@ -68,7 +72,7 @@ describe('PitWallNFT', () => {
   });
 
   it('a transfer moves the NFT out of one garage and into another', async () => {
-    await nft.connect(alice).claimStarter('oscar', 0);
+    await hire(alice, 'oscar');
     const [ids] = await nft.inventoryOf(alice.address);
     await nft.connect(alice).transferFrom(alice.address, bob.address, ids[0]);
     expect((await nft.inventoryOf(alice.address))[1].map((t) => t.key)).to.not.include('oscar');
@@ -81,7 +85,9 @@ describe('PitWallNFT', () => {
   });
 
   it('tokenURI is baseURI + key, and only the owner sets it or withdraws', async () => {
-    await nft.connect(alice).claimStarter('fernando', 2);
+    await hire(alice, 'fernando');
+    await nft.connect(alice).buyCoins({ value: COIN * 120n });
+    await nft.connect(alice).buyPart('engine_brake');
     expect(await nft.tokenURI(0)).to.equal('');
     await expect(nft.connect(alice).setBaseURI('ipfs://x/')).to.be.revertedWith('not owner');
     await nft.setBaseURI('ipfs://CID/');
@@ -91,9 +97,10 @@ describe('PitWallNFT', () => {
     const price = COIN * 280n;
     await nft.connect(bob).buyCoins({ value: price });
     await expect(nft.connect(bob).withdraw()).to.be.revertedWith('not owner');
-    // the owner takes only 70%: the other 30% went to the season pool
-    await expect(nft.withdraw()).to.changeEtherBalance(owner, price - (price * 3000n) / 10000n);
-    expect(await nft.seasonPool()).to.equal((price * 3000n) / 10000n);
+    // the owner takes only its 70% of all coin purchases: the other 30% stays in the season pool
+    const paid = COIN * (220n + 120n) + price; // fernando, engine_brake, then 280 coins
+    await expect(nft.withdraw()).to.changeEtherBalance(owner, paid - (paid * 3000n) / 10000n);
+    expect(await nft.seasonPool()).to.equal((paid * 3000n) / 10000n);
   });
 
   describe('season: play to earn', () => {
@@ -105,7 +112,7 @@ describe('PitWallNFT', () => {
 
     it('only a driver holder can post, with sane points and rounds that only go up', async () => {
       await expect(race(alice, 1, 25)).to.be.revertedWith('hold a driver NFT to race');
-      await nft.connect(alice).claimStarter('max', 0);
+      await hire(alice, 'max');
       await expect(race(alice, 1, 26)).to.be.revertedWith('too many points');
       await race(alice, 1, 25);
       await expect(race(alice, 1, 18)).to.be.revertedWith('round already posted');
@@ -114,7 +121,7 @@ describe('PitWallNFT', () => {
     });
 
     it('caps each player at 6 races a season, so points cannot be farmed', async () => {
-      await nft.connect(alice).claimStarter('max', 0);
+      await hire(alice, 'max');
       for (let r = 1; r <= 6; r++) await race(alice, r, 25);
       await expect(race(alice, 7, 25)).to.be.revertedWith('season race limit reached');
       expect(await nft.seasonPoints(1, alice.address)).to.equal(150n);
@@ -127,8 +134,9 @@ describe('PitWallNFT', () => {
 
     it('ends with the top 3 claiming 50/30/20% of the pool, and the rest rolling over', async () => {
       const carol = (await ethers.getSigners())[3];
-      for (const [p, d] of [[alice, 'max'], [bob, 'kimi'], [carol, 'oscar']]) await nft.connect(p).claimStarter(d, 0);
+      for (const [p, d] of [[alice, 'max'], [bob, 'kimi'], [carol, 'oscar']]) await hire(p, d);
       await nft.connect(owner).sponsor({ value: ethers.parseEther('1') });
+      const pool = await nft.seasonPool(); // 1 ETH plus 30% of what the three paid for coins
       await race(alice, 1, 18);
       await race(bob, 1, 25);
       await race(carol, 1, 15);
@@ -141,24 +149,25 @@ describe('PitWallNFT', () => {
       await expect(nft.connect(alice).endSeason()).to.be.revertedWith('not owner');
       await nft.endSeason();
       expect(await nft.season()).to.equal(2n);
-      expect(await nft.claimable(alice.address)).to.equal(ethers.parseEther('0.5'));
-      await expect(nft.connect(bob).claim()).to.changeEtherBalance(bob, ethers.parseEther('0.3'));
+      expect(await nft.claimable(alice.address)).to.equal(pool / 2n);
+      await expect(nft.connect(bob).claim()).to.changeEtherBalance(bob, (pool * 3000n) / 10000n);
       await expect(nft.connect(bob).claim()).to.be.revertedWith('nothing to claim');
-      expect(await nft.seasonPool()).to.equal(0n);
+      expect(await nft.seasonPool()).to.equal(pool - pool / 2n - (pool * 3000n) / 10000n - (pool * 2000n) / 10000n);
     });
 
     it('with fewer than 3 players the unawarded shares stay in the pool', async () => {
-      await nft.connect(alice).claimStarter('max', 0);
+      await hire(alice, 'max');
       await nft.sponsor({ value: ethers.parseEther('1') });
+      const pool = await nft.seasonPool();
       await race(alice, 1, 10);
       await nft.endSeason();
-      expect(await nft.claimable(alice.address)).to.equal(ethers.parseEther('0.5'));
-      expect(await nft.seasonPool()).to.equal(ethers.parseEther('0.5'));
+      expect(await nft.claimable(alice.address)).to.equal(pool / 2n);
+      expect(await nft.seasonPool()).to.equal(pool - pool / 2n);
     });
 
     it('the steward can void a race whose record does not check out', async () => {
-      await nft.connect(alice).claimStarter('max', 0);
-      await nft.connect(bob).claimStarter('kimi', 0);
+      await hire(alice, 'max');
+      await hire(bob, 'kimi');
       await race(alice, 1, 25);
       await race(bob, 1, 18);
       await expect(nft.connect(bob).voidRace(alice.address, 1)).to.be.revertedWith('not owner');
@@ -169,11 +178,11 @@ describe('PitWallNFT', () => {
     });
 
     it('seasonInfo gives the game everything for its panel', async () => {
-      await nft.connect(alice).claimStarter('max', 0);
+      await hire(alice, 'max');
       await nft.sponsor({ value: 1000n });
       await race(alice, 4, 12);
       const info = await nft.seasonInfo(alice.address);
-      expect([info.currentSeason, info.pool, info.myPoints, info.myLastRound, info.myClaimable]).to.deep.equal([1n, 1000n, 12n, 4n, 0n]);
+      expect([info.currentSeason, info.pool, info.myPoints, info.myLastRound, info.myClaimable]).to.deep.equal([1n, await nft.seasonPool(), 12n, 4n, 0n]);
       expect(info.top[0]).to.equal(alice.address);
     });
   });
