@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { CHAIN_NAME } from '../chain/config';
 import { TRACKS, byId } from '../shared/constants';
 import { shortAddress } from '../shared/plan';
 import { useGame } from '../useGame';
@@ -29,7 +28,7 @@ export function StatusBar() {
         </span>
       )}
       {state.wallet && (
-        <span className="wallet-chip" title={`Wallet ${state.wallet} on ${CHAIN_NAME}`}>
+        <span className="wallet-chip" title={`Wallet ${state.wallet}`}>
           {shortAddress(state.wallet)}
         </span>
       )}
@@ -41,11 +40,6 @@ export function StatusBar() {
           </button>
         )}
       </span>
-      {state.ethBalance !== null && (
-        <span className="coins eth" title={`${CHAIN_NAME} ETH in your wallet: exchange it for coins with +`} aria-label={`${state.ethBalance} ETH`}>
-          <i className="eth-mark" aria-hidden /> {state.ethBalance} ETH
-        </span>
-      )}
       {state.wallet && <ExchangeDialog open={exchange} onClose={() => setExchange(false)} />}
     </div>
   );

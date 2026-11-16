@@ -1,4 +1,5 @@
-import { CHAIN_NAME } from '../chain/config';
+import { useState } from 'react';
+import { ExchangeDialog } from '../components/ExchangeDialog';
 import { Button } from '../components/Button';
 import { WeatherIcon } from '../components/PixelIcon';
 import { DriverImg } from '../components/Sprites';
@@ -17,6 +18,7 @@ const KIND: Record<DayKind, string> = { market: 'Market', practice: 'Practice', 
 
 export function Home() {
   const { state, service, go, demo, setDemo, isOpen, attempt, notify, connectWallet } = useGame();
+  const [exchange, setExchange] = useState(false);
   const committed = state.commit?.round === service.nextRace().round;
   const week = service.schedule();
   const today = week.find((d) => d.today)!;
@@ -49,23 +51,19 @@ export function Home() {
       {state.wallet ? (
         <div className="glass home-id">
           <span>
-            <small>Wallet · {CHAIN_NAME}</small>
+            <small>Wallet</small>
             {shortAddress(state.wallet)}
           </span>
           <span>
             <small>Coins</small>
             <span className="coin-val">
               <i className="coin" /> {state.coins.toLocaleString()}
+              <button type="button" className="coin-plus" aria-label="Get coins with ETH" title="Exchange ETH for coins" onClick={() => setExchange(true)}>
+                +
+              </button>
             </span>
+            <ExchangeDialog open={exchange} onClose={() => setExchange(false)} />
           </span>
-          {state.ethBalance !== null && (
-            <span>
-              <small>{CHAIN_NAME} ETH</small>
-              <span className="coin-val">
-                <i className="eth-mark" aria-hidden /> {state.ethBalance}
-              </span>
-            </span>
-          )}
           <span className="home-wallet-actions">
             <button
               type="button"

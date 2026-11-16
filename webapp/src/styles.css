@@ -784,7 +784,7 @@ button:disabled.driver-row, button:disabled.chip, .cb-callout:disabled { opacity
 }
 .coin-plus:hover { background: var(--red-dark); }
 .coin-plus:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
-.exchange { max-width: 480px; white-space: normal; text-align: left; font-size: 15px; }
+.exchange { max-width: 480px; white-space: normal; text-align: left; font-size: 15px; font-family: var(--text); }
 .exchange-packs { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 14px 0 10px; }
 .exchange-packs button { font-family: var(--pixel); font-size: 11px; }
 .exchange-amount { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 700; }

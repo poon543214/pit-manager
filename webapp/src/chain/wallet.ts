@@ -70,17 +70,34 @@ async function ensureNetwork(): Promise<void> {
 }
 
 /**
- * ก๊อกน้ำ ETH ทดสอบ: เฉพาะ Hardhat node ในเครื่อง เติม ETH ให้กระเป๋าตรงที่ node (hardhat_setBalance)
- * ไม่ต้อง import บัญชีทดสอบเข้า MetaMask
+ * ก๊อกน้ำ ETH ทดสอบ (เฉพาะ Hardhat node ในเครื่อง): โอน ETH จริงจากบัญชีทดสอบของ node มาที่กระเป๋า
+ * เป็นธุรกรรมจริงที่ขุดเป็น block ใหม่ MetaMask จึงเห็นยอดเปลี่ยนทันที (ไม่ต้อง import บัญชีทดสอบ)
  */
 export async function topUpTestEth(address: string, eth = 10): Promise<void> {
   if (!IS_LOCAL) throw new Error("Test ETH is only for the local chain.");
-  const node = new JsonRpcProvider(CHAIN.rpcUrl);
+  const node = new JsonRpcProvider(CHAIN.rpcUrl, undefined, { staticNetwork: true });
   try {
-    const balance = await node.getBalance(address);
-    await node.send("hardhat_setBalance", [address, toQuantity(balance + parseEther(String(eth)))]);
-  } catch {
-    throw new Error(`The local chain isn't running at ${CHAIN.rpcUrl}. Start it with npm run chain in contracts/.`);
+    let accounts: string[];
+    try {
+      accounts = await node.send("eth_accounts", []);
+    } catch {
+      throw new Error(`The local chain isn't running at ${CHAIN.rpcUrl}. Start it with npm run chain in contracts/.`);
+    }
+    // บัญชีท้ายสุดของ node (ไม่ใช่ deployer #0) เป็นคนจ่าย node เซ็นให้เพราะบัญชีทดสอบปลดล็อกอยู่แล้ว
+    const from = accounts[accounts.length - 1];
+    const hash: string = await node.send("eth_sendTransaction", [{ from, to: address, value: toQuantity(parseEther(String(eth))) }]);
+    await node.waitForTransaction(hash);
+  } finally {
+    node.destroy();
+  }
+}
+
+/** ยอด ETH ของกระเป๋า: บน chain local อ่านจาก node ตรง ๆ (MetaMask อาจแคชยอดเก่า) */
+export async function localEthBalance(address: string): Promise<bigint | null> {
+  if (!IS_LOCAL) return null;
+  const node = new JsonRpcProvider(CHAIN.rpcUrl, undefined, { staticNetwork: true });
+  try {
+    return await node.getBalance(address);
   } finally {
     node.destroy();
   }

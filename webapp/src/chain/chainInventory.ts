@@ -3,6 +3,7 @@ import drivers from "../data/drivers.json";
 import parts from "../data/parts.json";
 import { PIT_WALL_ABI } from "./abi";
 import { CONTRACT_ADDRESS } from "./config";
+import { localEthBalance } from "./wallet";
 
 // ข้อมูลเกม (รูปร่าง, perk, ราคา) มาจาก JSON ส่วนสถานะและความเป็นเจ้าของมาจาก chain
 export type DriverDef = (typeof drivers)[number];
@@ -64,9 +65,9 @@ export async function getInventory(provider: BrowserProvider, address: string): 
 
 /** ETH ที่ใช้ได้ในกระเป๋า ปัดเป็น 4 ตำแหน่ง เช่น "0.0421" */
 export async function ethBalance(provider: BrowserProvider, address: string): Promise<string> {
-  return (+formatEther(await provider.getBalance(address))).toFixed(4);
+  const wei = (await localEthBalance(address)) ?? (await provider.getBalance(address));
+  return (+formatEther(wei)).toFixed(4);
 }
-
 
 // ---------- เขียน: ต้องเซ็นใน MetaMask และเสียค่า gas ----------
 /** kind: 0 speed, 1 corner, 2 brake */
