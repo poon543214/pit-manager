@@ -20,12 +20,19 @@ const contractFor = (runner: BrowserProvider | JsonRpcSigner) => new Contract(CO
 const eth = (wei: bigint) => (+formatEther(wei)).toFixed(5);
 
 export async function getSeason(provider: BrowserProvider, address: string): Promise<ChainSeason> {
-  const i = await contractFor(provider).seasonInfo(address);
+  const c = contractFor(provider);
+  const i = await c.seasonInfo(address);
+  // The deployed contract checks rounds per season, so after endSeason an old race could be posted again.
+  // Game rounds keep counting up across seasons, so the highest round posted in ANY season is the floor
+  // for the next post; the game hides "Post" for every race at or below it (see SECURITY.md, item 3).
+  const seasons = Array.from({ length: Number(i.currentSeason) - 1 }, (_, k) => k + 1);
+  const earlier: bigint[] = await Promise.all(seasons.map((s) => c.lastRound(s, address)));
+  const lastEver = Math.max(Number(i.myLastRound), ...earlier.map(Number));
   return {
     season: Number(i.currentSeason),
     pool: eth(i.pool),
     myPoints: Number(i.myPoints),
-    myLastRound: Number(i.myLastRound),
+    myLastRound: lastEver,
     claimable: eth(i.myClaimable),
     top: (i.top as string[])
       .map((a, k) => ({ address: a, points: Number(i.topPoints[k]) }))

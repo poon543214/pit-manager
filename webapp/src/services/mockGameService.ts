@@ -284,7 +284,7 @@ export function createMockGameService(): GameService {
       if (!session) throw new Error('Connect your wallet first.');
       if (!result.proof) throw new Error('This race has no record to post.');
       const posted = store.get().chainSeason?.myLastRound ?? 0;
-      if (result.proof.round <= posted) throw new Error(`R${result.proof.round} is already posted for this season.`);
+      if (result.proof.round <= posted) throw new Error(`R${result.proof.round} is already posted on chain. A race can only be posted once, in any season.`);
       await submitRace(session.signer, result);
       await syncWallet();
     },

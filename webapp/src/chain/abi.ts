@@ -10,6 +10,7 @@ export const PIT_WALL_ABI = [
   "function buyDriver(string key)",
   "function buyPart(string key)",
   "function seasonInfo(address who) view returns (uint256 currentSeason, uint256 pool, uint256 myPoints, uint256 myLastRound, uint256 myClaimable, address[3] top, uint256[3] topPoints)",
+  "function lastRound(uint256 season, address player) view returns (uint256)",
   "function submitRace(uint256 round, uint256 points, bytes32 record)",
   "function claim()",
   "function sponsor() payable",

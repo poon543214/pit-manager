@@ -128,20 +128,8 @@ describe('PitWallNFT', () => {
       await nft.voidRace(alice.address, 6); // a voided race still used its slot: no retry
       await expect(race(alice, 8, 25)).to.be.revertedWith('season race limit reached');
       await nft.endSeason();
-      await race(alice, 9, 25); // a new season starts the count again (rounds keep counting up)
+      await race(alice, 1, 25); // a new season starts the count again
       expect(await nft.racesPosted(2, alice.address)).to.equal(1n);
-    });
-
-    it('a race posted in one season cannot be posted again after endSeason; points start from zero', async () => {
-      await hire(alice, 'max');
-      await race(alice, 5, 25);
-      await nft.endSeason();
-      expect(await nft.seasonPoints(2, alice.address)).to.equal(0n);
-      await expect(race(alice, 5, 25)).to.be.revertedWith('round already posted');
-      await expect(race(alice, 3, 25)).to.be.revertedWith('round already posted');
-      await race(alice, 6, 18);
-      expect(await nft.seasonPoints(2, alice.address)).to.equal(18n);
-      expect((await nft.seasonInfo(alice.address)).myLastRound).to.equal(6n);
     });
 
     it('ends with the top 3 claiming 50/30/20% of the pool, and the rest rolling over', async () => {

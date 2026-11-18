@@ -55,8 +55,8 @@
 | `endSeason` | [`0x30e801b6…6d9c`](https://sepolia.etherscan.io/tx/0x30e801b617198fd8aee0b6a0a71df3cb25bc3ce7d3576286bfc95e438d056d9c) |
 | `claim` (ได้รับ 0.0015 ETH) | [`0xcc1e3f91…feb5`](https://sepolia.etherscan.io/tx/0xcc1e3f91ba822d4b6e562dee615bf33a97731b3d85220efffaeddb7283a5feb5) |
 
-> ⚠️ **contract ที่ address นี้มีบั๊ก:** ส่งผลเรซเดิมซ้ำในฤดูกาลใหม่ได้ ดูหลักฐาน [submitRace ครั้งที่ 2](https://sepolia.etherscan.io/tx/0x5001e7560c30c6ebde1b85c3905efa834f3bb5f7fcc388c282be1c780c8ea958) ซึ่งใช้ R5 ผลเดิม
-> แก้แล้วในโค้ด (`lastPostedRound`) รายละเอียดใน [SECURITY.md](SECURITY.md) ข้อ 3 ต้อง deploy `contracts/remix/PitWallNFT.sol` ใหม่แล้วอัปเดต address ในตารางนี้
+> ⚠️ **ช่องโหว่ที่รู้แล้ว:** contract นี้เช็กรอบที่ส่งแยกตามฤดูกาล จึงส่งผลเรซเดิมซ้ำในฤดูกาลใหม่ได้ (หลักฐาน: [submitRace ครั้งที่ 2](https://sepolia.etherscan.io/tx/0x5001e7560c30c6ebde1b85c3905efa834f3bb5f7fcc388c282be1c780c8ea958) ใช้ R5 ผลเดิม)
+> หน้าเว็บกันไว้แล้ว (ซ่อนปุ่ม Post ของเรซที่เคยส่งในฤดูกาลไหนก็ตาม) ส่วนการเรียก contract ตรงต้องให้ steward `voidRace` ยังไม่ได้แก้ใน contract เพราะ Sepolia ETH ไม่พอ deploy ใหม่ ดูวิธีแก้ใน [SECURITY.md](SECURITY.md) ข้อ 3
 
 ## สิ่งที่ต้องมี
 
