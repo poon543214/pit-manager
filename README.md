@@ -5,11 +5,41 @@
 > **Branch นี้ (`sepolia`)** ใช้ contract ที่ deploy บน **Sepolia testnet** ผ่าน Remix ตรวจได้บน Etherscan
 > ถ้าต้องการเวอร์ชันที่รันบน chain ในเครื่อง (Hardhat local, มีปุ่มเติม ETH ทดสอบ) ดู branch [`local-hardhat`](https://github.com/poon543214/pit-manager/tree/local-hardhat)
 
+## Branch ไหนใช้ทำอะไร
+
 | Branch | ใช้ทำอะไร |
 |---|---|
-| `sepolia` | เวอร์ชันส่งงาน: Sepolia + Remix + Etherscan |
-| `local-hardhat` | เวอร์ชันพัฒนา: Hardhat local chain |
-| `deployed` | เวอร์ชันแรกที่ขึ้น Sepolia (contract รุ่นเก่า เก็บไว้เป็นประวัติ) |
+| [`sepolia`](https://github.com/poon543214/pit-manager/tree/sepolia) | **เวอร์ชันส่งงาน:** contract อยู่บน Sepolia testnet (deploy ด้วย Remix, verify บน Etherscan) |
+| [`local-hardhat`](https://github.com/poon543214/pit-manager/tree/local-hardhat) | **เวอร์ชันพัฒนา:** รันทุกอย่างในเครื่องด้วย Hardhat local chain |
+| [`deployed`](https://github.com/poon543214/pit-manager/tree/deployed) | เวอร์ชันแรกที่ขึ้น Sepolia (contract รุ่นเก่า เก็บไว้เป็นประวัติ) |
+
+ตัวเกม, smart contract (`PitWallNFT.sol`), เทสต์ของ contract และกติกาทั้งหมด **เหมือนกันทั้ง 2 branch** ต่างกันที่ contract อยู่บน chain ไหนและวิธีรัน
+
+สิ่งที่มีเฉพาะใน `sepolia`:
+- ไฟล์ Remix `contracts/remix/PitWallNFT.sol`
+- ข้อความ error ของธุรกรรมที่อ่านเข้าใจ (`webapp/src/chain/errors.ts` + เทสต์)
+- `scripts/gas-report.js`
+- `SECURITY.md`
+
+### ความต่างระหว่าง `sepolia` กับ `local-hardhat`
+
+| เรื่อง | `sepolia` | `local-hardhat` |
+|---|---|---|
+| Chain | Sepolia testnet (chainId 11155111) เครือข่ายสาธารณะ | Hardhat node ในเครื่อง (chainId 31337) |
+| Deploy contract | วาง `contracts/remix/PitWallNFT.sol` ใน **Remix** (0.8.24, optimization 200) | `npm run deploy:local` สั่งครั้งเดียว |
+| Address ของ contract | อยู่ใน `webapp/src/chain/sepolia-deployment.json` ใส่เองหลัง deploy | สคริปต์ deploy เขียนให้อัตโนมัติใน `local-deployment.json` |
+| ตรวจสอบจากภายนอก | ✅ เปิดดู contract, โค้ด (verified) และทุกธุรกรรมบน Etherscan ได้ | ❌ อยู่ในเครื่องเท่านั้น ไม่มี explorer |
+| ETH ที่ใช้ | Sepolia ETH จาก faucet (มีจำกัด ต้องขอล่วงหน้า) | ปุ่ม **+10 test ETH** ในเกม เติมได้ไม่จำกัด |
+| ความเร็วธุรกรรม | รอ block ~12 วินาที | เสร็จทันที |
+| ค่า gas | จ่ายจริง (ด้วย Sepolia ETH) | ฟรี |
+| ข้อมูลหลังปิดเครื่อง | อยู่ถาวรบน chain | หายทั้งหมดเมื่อปิด node ต้อง deploy ใหม่ |
+| Steward (`endSeason`, `voidRace`, `sponsor`) | เรียกใน Remix ด้วยกระเป๋า owner | `npm run steward` (เซ็นด้วยบัญชี #0 ของ Hardhat) |
+| กองรางวัลเริ่มต้น | ต้องเรียก `sponsor()` เอง | deploy แล้วใส่ 1 ETH ให้อัตโนมัติ |
+| ปุ่ม **Contract ↗** (ไป Etherscan) ในหน้า Home | มี | ไม่มี |
+| ปัญหาที่เจอบ่อย | faucet ให้ ETH ไม่พอ, เครือข่ายช้าบางช่วง | ปิด node แล้ว NFT หาย, MetaMask nonce ไม่ตรง (ต้อง Clear activity) |
+| เหมาะกับ | ส่งงาน, เดโมให้อาจารย์, อ้างอิงธุรกรรมในรายงาน | พัฒนา, ทดลองเร็ว ๆ, ลองแก้ contract ก่อน deploy จริง |
+
+> ใน branch `sepolia` สลับไปรันบน chain ในเครื่องได้ด้วย `VITE_CHAIN=local npm run dev` (ต้องเปิด `npm run chain` และ `npm run deploy:local` ก่อน)
 
 ## Contract บน Sepolia
 
