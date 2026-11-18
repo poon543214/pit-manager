@@ -2,8 +2,8 @@
 
 เกมบริหารทีม F1 แบบ pixel art บน blockchain นักแข่งและชิ้นส่วนรถเป็น NFT (ERC-721) เหรียญในเกมเก็บบน chain และผู้เล่น 3 อันดับแรกของฤดูกาลรับรางวัลเป็น ETH
 
-> **Branch นี้ (`main`)** รันบน **Hardhat local chain** ในเครื่อง ไม่ต้องใช้ testnet และไม่ต้องหา ETH
-> ถ้าต้องการเวอร์ชันที่ต่อ Sepolia ดู branch [`deployed`](https://github.com/poon543214/pit-manager/tree/deployed)
+> **Branch นี้ (`local-hardhat`)** รันบน **Hardhat local chain** ในเครื่อง ไม่ต้องใช้ testnet และไม่ต้องหา ETH (ใช้ตอนพัฒนา)
+> เวอร์ชันส่งงานที่ deploy บน Sepolia ผ่าน Remix อยู่ที่ branch [`sepolia`](https://github.com/poon543214/pit-manager/tree/sepolia)
 
 ## สิ่งที่ต้องมี
 
