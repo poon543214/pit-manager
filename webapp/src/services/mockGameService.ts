@@ -417,7 +417,8 @@ export function createMockGameService(): GameService {
     },
 
     async connectWallet() {
-      if (CONTRACT_ADDRESS.startsWith('0xYOUR')) throw new Error('Set CONTRACT_ADDRESS in src/chain/config.ts first.');
+      if (!/^0x[0-9a-fA-F]{40}$/.test(CONTRACT_ADDRESS))
+        throw new Error('No contract address yet. Deploy PitWallNFT and put its address in src/chain/sepolia-deployment.json.');
       session = await connectWallet();
       await syncWallet();
       return session.address;

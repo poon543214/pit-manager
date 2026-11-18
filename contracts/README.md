@@ -65,12 +65,15 @@ checks them (optimistic). A real deployment would need records published where a
 npm test
 ```
 
-## Sepolia (optional)
+## Sepolia (Remix)
 
-1. Open `contracts/PitWallNFT.sol` in Remix, compile with EVM version **cancun** (or 0.8.25+), deploy with
-   "Injected Provider - MetaMask" on Sepolia. Or: `export SEPOLIA_RPC_URL=… PRIVATE_KEY=…` then `npm run deploy:sepolia`
-   (keep the key out of files).
-2. Put the address in the `sepolia` entry of `webapp/src/chain/config.ts` and start the game with `VITE_CHAIN=sepolia npm run dev`.
+1. Use **`remix/PitWallNFT.sol`**: one file with OpenZeppelin 5.0.2 inlined (`npx hardhat flatten` of `contracts/PitWallNFT.sol`).
+   Regenerate it after any contract change.
+2. Remix: compiler **0.8.24**, **optimization on, 200 runs** (without it the bytecode is 26.9 KB, over the 24 KB limit;
+   with it, 14.7 KB). Deploy `PitWallNFT` with "Injected Provider - MetaMask" on Sepolia.
+3. Put the address in `../webapp/src/chain/sepolia-deployment.json` (the game uses Sepolia by default).
+4. Verify on Etherscan as a single file: v0.8.24, MIT, optimization yes / 200 runs.
+5. `npx hardhat run scripts/gas-report.js` prints the gas each action uses (used in `../SECURITY.md`).
 
 ## Metadata and images
 

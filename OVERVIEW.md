@@ -167,12 +167,12 @@
 
 | หัวข้อ | ค่า |
 |---|---|
-| Chain | Hardhat local (chainId 31337, `http://127.0.0.1:8545`) เป็นค่าเริ่มต้น เลือก Sepolia ได้ด้วย `VITE_CHAIN=sepolia` |
+| Chain | **Sepolia testnet** (chainId 11155111) เป็นค่าเริ่มต้น deploy ผ่าน Remix และตรวจได้บน Etherscan / Hardhat local (chainId 31337) ใช้ตอนพัฒนาด้วย `VITE_CHAIN=local` (branch `local-hardhat`) |
 | Contract | `PitWallNFT` ตัวเดียว (ERC-721 Enumerable, OpenZeppelin 5.0.2, Solidity 0.8.24) |
 | กระเป๋า | MetaMask ผ่าน Ethers.js v6 |
 | เงิน | เหรียญ (coin) สกุลเดียว เก็บบน chain แลกจาก ETH: 1 coin = 0.00001 ETH |
 | Metadata | JSON + PNG 26 ไฟล์สำหรับ IPFS (`tokenURI = baseURI + key + ".json"`) |
-| ทดสอบ | Hardhat 12 ข้อ (contract), Vitest 10 ข้อ (เกม) |
+| ทดสอบ | Hardhat 12 ข้อ (contract), Vitest 15 ข้อ (เกม + ข้อความ error ของธุรกรรม), gas report |
 
 ## 2.2 อะไรอยู่บน chain และอะไรอยู่ในเบราว์เซอร์
 
@@ -225,7 +225,7 @@
 
 | ขั้น | ผู้เล่นทำ | บน chain |
 |---|---|---|
-| 1 | (local) กด **+** → **+10 test ETH** | node โอน ETH จริงจากบัญชีทดสอบ ไม่ต้อง import key |
+| 1 | มี Sepolia ETH ในกระเป๋า (faucet) / บน local กด **+** → **+10 test ETH** | – |
 | 2 | กด **+** → เลือกจำนวนเหรียญ → Exchange | `buyCoins()` |
 | 3 | ซื้อนักแข่ง/ชิ้นส่วนใน Market | `buyDriver` / `buyPart` |
 | 4 | ซื้อยาง/ซ่อม/practice (นอก demo) | `spendCoins` |
@@ -237,6 +237,7 @@
 - กดซีลใน Garage: `keccak256(abi.encode(round, driver, engine, aero, gearbox, suspension, tire, stopLaps[], stopTires[], salt))`
 - Reveal: ตรวจว่าเซ็ตตรงกับ hash แล้วสุ่ม seed ครั้งเดียว จึงเปลี่ยนเซ็ตตามสภาพอากาศจริงไม่ได้
 - คำสั่งพิทระหว่างแข่งถูกบันทึก รีโหลดแล้วได้เรซเดิม
+- **ข้อจำกัด:** commit hash ของการซีลเก็บในเบราว์เซอร์ ยังไม่ได้ส่งขึ้น chain สิ่งที่ขึ้น chain คือ `recordHash` ตอน `submitRace` (ดู SECURITY.md ข้อ 7)
 
 **Play to earn (ฤดูกาลบน chain)**
 
@@ -245,8 +246,8 @@
 | เติมกอง | ทุกคนที่แลกเหรียญ (30% อัตโนมัติ) / sponsor | ปุ่ม + / steward | `buyCoins` / `sponsor` |
 | ส่งผล | ผู้เล่น | Results → Post result | `submitRace` |
 | ดูอันดับ | ทุกคน | Results → On-chain season | `seasonInfo` |
-| ตรวจ | steward | Verify race + `npm run steward` | `voidRace` |
-| ปิดฤดูกาล | steward | `STEWARD=end npm run steward` | `endSeason` |
+| ตรวจ | steward | Verify race + Remix (local: `npm run steward`) | `voidRace` |
+| ปิดฤดูกาล | steward | Remix (local: `STEWARD=end npm run steward`) | `endSeason` |
 | รับเงิน | top 3 (50 / 30 / 20%) | Results → Claim | `claim` |
 
 - `recordHash = keccak256(commitHash, seed, callLaps[], callTires[], position, points)` เป็นลายนิ้วมือของเรซทั้งเรซ
@@ -268,13 +269,15 @@
 | สร้าง JSON | `IMAGE_CID=<CID> node scripts/build-metadata.js` (มี attribute ค่า, Version, Tire care, Wet grip, Reliability, Skill) |
 | ผูกกับ contract | อัปโหลดโฟลเดอร์ json แล้วเรียก `setBaseURI("ipfs://<CID>/")` |
 
-## 2.8 วิธีรัน (local)
+## 2.8 วิธีรัน
 
-| Terminal | คำสั่ง |
-|---|---|
-| 1 | `cd contracts && npm run chain` |
-| 2 | `cd contracts && npm run deploy:local` (deploy + ใส่ 1 ETH ในกอง + เขียน address ให้เกม) |
-| 3 | `cd webapp && npm run dev` |
+| ขั้น | Sepolia (ส่งงาน) | Local (พัฒนา) |
+|---|---|---|
+| 1 | Deploy `contracts/remix/PitWallNFT.sol` บน Remix (0.8.24, optimization 200) | `cd contracts && npm run chain` |
+| 2 | ใส่ address ใน `webapp/src/chain/sepolia-deployment.json` + `sponsor()` 0.01 ETH | `cd contracts && npm run deploy:local` |
+| 3 | `cd webapp && npm run dev` | `cd webapp && VITE_CHAIN=local npm run dev` |
+
+- ความปลอดภัยและการเปรียบเทียบ L1/L2 อยู่ใน `SECURITY.md`
 
 ## 2.9 ข้อจำกัดและความเสี่ยง
 

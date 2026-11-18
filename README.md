@@ -2,38 +2,67 @@
 
 เกมบริหารทีม F1 แบบ pixel art บน blockchain นักแข่งและชิ้นส่วนรถเป็น NFT (ERC-721) เหรียญในเกมเก็บบน chain และผู้เล่น 3 อันดับแรกของฤดูกาลรับรางวัลเป็น ETH
 
-> **Branch นี้ (`main`)** รันบน **Hardhat local chain** ในเครื่อง ไม่ต้องใช้ testnet และไม่ต้องหา ETH
-> ถ้าต้องการเวอร์ชันที่ต่อ Sepolia ดู branch [`deployed`](https://github.com/poon543214/pit-manager/tree/deployed)
+> **Branch นี้ (`sepolia`)** ใช้ contract ที่ deploy บน **Sepolia testnet** ผ่าน Remix ตรวจได้บน Etherscan
+> ถ้าต้องการเวอร์ชันที่รันบน chain ในเครื่อง (Hardhat local, มีปุ่มเติม ETH ทดสอบ) ดู branch [`local-hardhat`](https://github.com/poon543214/pit-manager/tree/local-hardhat)
+
+| Branch | ใช้ทำอะไร |
+|---|---|
+| `sepolia` | เวอร์ชันส่งงาน: Sepolia + Remix + Etherscan |
+| `local-hardhat` | เวอร์ชันพัฒนา: Hardhat local chain |
+| `deployed` | เวอร์ชันแรกที่ขึ้น Sepolia (contract รุ่นเก่า เก็บไว้เป็นประวัติ) |
+
+## Contract บน Sepolia
+
+| รายการ | ค่า |
+|---|---|
+| Contract address | `ใส่หลัง deploy` |
+| Etherscan | `https://sepolia.etherscan.io/address/<address>` |
+| Deploy tx | `ใส่หลัง deploy` |
+| ตัวอย่างธุรกรรมจากเดโม (buyCoins / buyDriver / submitRace / claim) | `ใส่หลังเล่นจริง` |
 
 ## สิ่งที่ต้องมี
 
 - [Node.js](https://nodejs.org) 18 ขึ้นไป
-- เบราว์เซอร์ที่ติดตั้ง [MetaMask](https://metamask.io)
+- เบราว์เซอร์ที่ติดตั้ง [MetaMask](https://metamask.io) และเปิด **Show test networks** แล้วเลือก **Sepolia**
+- Sepolia ETH ประมาณ **0.05 ETH** (ขอฟรีจาก Sepolia faucet) ใช้กับ:
+  - deploy contract (~5.9 ล้าน gas)
+  - เติมกองรางวัล 0.01 ETH
+  - แลกเหรียญ 1,000 เหรียญ = 0.01 ETH
+  - ค่า gas ระหว่างเล่น
 
-## วิธีรัน
+## 1. Deploy contract บน Remix
 
-เปิด terminal 3 หน้าต่าง ทำตามลำดับ
+ไฟล์ที่ใช้คือ **`contracts/remix/PitWallNFT.sol`** เป็นไฟล์เดียวที่รวม OpenZeppelin 5.0.2 ไว้แล้ว ไม่ต้อง import อะไรเพิ่ม
 
-**1. เปิด chain local** (ค้างไว้ตลอดที่เล่น)
+1. เปิด [remix.ethereum.org](https://remix.ethereum.org) → สร้างไฟล์ใหม่ `PitWallNFT.sol` → วางเนื้อหาจาก `contracts/remix/PitWallNFT.sol`
+2. แท็บ **Solidity Compiler**
+   - Compiler: **0.8.24**
+   - **Advanced Configurations → เปิด Enable optimization, runs = 200** (สำคัญมาก: ถ้าไม่เปิด contract จะใหญ่ 26.9 KB เกินลิมิต 24 KB และ deploy ไม่ผ่าน เปิดแล้วเหลือ 14.7 KB)
+   - EVM version: ค่าเริ่มต้น
+   - กด **Compile PitWallNFT.sol**
+3. แท็บ **Deploy & Run**
+   - Environment: **Injected Provider - MetaMask** (ต้องอยู่บน Sepolia)
+   - Contract: **PitWallNFT** (ไม่มี constructor argument)
+   - กด **Deploy** แล้วยืนยันใน MetaMask
+4. คัดลอก address ของ contract ไปใส่ใน **`webapp/src/chain/sepolia-deployment.json`**:
 
-```bash
-cd contracts
-npm install
-npm run chain
+```json
+{ "address": "0x..." }
 ```
 
-ได้ node ที่ `http://127.0.0.1:8545` (chain id `31337`)
+5. ใส่เงินกองรางวัล: ใน Remix ช่อง **VALUE** ใส่ `0.01` เลือกหน่วย **Ether** แล้วกด **sponsor**
 
-**2. Deploy contract** (ทำครั้งเดียวต่อการเปิด chain 1 ครั้ง)
+### Verify บน Etherscan (ให้เปิดอ่านโค้ดบนเว็บได้)
 
-```bash
-cd contracts
-npm run deploy:local
-```
+- **วิธีที่ 1 (ใน Remix):** เปิด plugin **Contract Verification** → เลือก Etherscan → ใส่ API key ฟรีจาก etherscan.io → Verify
+- **วิธีที่ 2 (บนเว็บ):** หน้า contract บน Sepolia Etherscan → **Contract → Verify and Publish**
+  - Compiler type: Solidity (Single file)
+  - Compiler: v0.8.24
+  - License: MIT
+  - Optimization: Yes, 200 runs
+  - วางเนื้อหา `contracts/remix/PitWallNFT.sol` ทั้งไฟล์
 
-คำสั่งนี้ deploy `PitWallNFT` แล้วใส่ 1 ETH เข้ากองรางวัลฤดูกาล และเขียน address ลง `webapp/src/chain/local-deployment.json` ให้เกมอ่านเอง ไม่ต้องแก้โค้ด
-
-**3. เปิดเกม**
+## 2. เปิดเกม
 
 ```bash
 cd webapp
@@ -41,60 +70,87 @@ npm install
 npm run dev
 ```
 
-เปิด `http://localhost:5173`
+เปิด `http://localhost:5173` เกมจะต่อ Sepolia เป็นค่าเริ่มต้น
 
-## เริ่มเล่น
+## 3. เริ่มเล่น
 
-1. หน้า Home กด **Connect wallet** แล้วอนุญาตใน MetaMask จะมีขั้นให้กด **เพิ่มและสลับไป network "Hardhat Local"** ด้วย
-2. กด **+** ข้างยอดเหรียญ แล้วกด **+10 test ETH** เพื่อโอน ETH ทดสอบจาก node เข้าบัญชี MetaMask ของคุณ ไม่ต้อง import private key (ยอด ETH แสดงเฉพาะในหน้าต่างเติมเหรียญนี้)
-3. แลกเหรียญ: กด **+** → เลือกจำนวน → **Exchange** (1 เหรียญ = 0.00001 ETH) นักแข่ง 1 คน + ชิ้นส่วน 4 ชิ้นใช้ประมาณ 700–800 เหรียญ
-4. ไปหน้า **Market** ซื้อนักแข่งและชิ้นส่วนด้วยเหรียญ (ชิ้นส่วนมี 3 type: Speed, Corner, Brake และบาง type มีเวอร์ชัน Endurance หรือ Rain)
-5. **Garage** จัดรถ เลือกยาง วางแผนพิท → **Race** → **Results**
-6. ที่ Results กด **Post result** เพื่อส่งคะแนนขึ้น chain
+1. หน้า Home กด **Connect wallet** แล้วอนุญาตใน MetaMask ถ้าอยู่ network อื่น เกมจะขอให้สลับเป็น Sepolia
+2. กด **+** ข้างยอดเหรียญ → เลือกจำนวน → **Exchange** (1 เหรียญ = 0.00001 ETH) นักแข่ง 1 คน + ชิ้นส่วน 4 ชิ้นใช้ประมาณ 700–800 เหรียญ
+3. **Market** ซื้อนักแข่งและชิ้นส่วนด้วยเหรียญ ทุกครั้งต้องยืนยันใน MetaMask และรอ block ~12 วินาที
+4. **Garage** จัดรถ เลือกยาง วางแผนพิท → **Race** → **Results**
+5. ที่ Results กด **Post result** เพื่อส่งคะแนนขึ้น chain
+6. ที่หน้า Home กด **Contract ↗** เพื่อเปิด contract บน Etherscan
 
-## Steward (ปิดฤดูกาล / ตรวจผล)
+> เปิด **Demo mode** ไว้ตอนนำเสนอ: ยาง ซ่อม และ practice ไม่ต้องส่งธุรกรรม (ประหยัดเวลาและ gas) ส่วนการแลกเหรียญ ซื้อ NFT ส่งผล และ claim ยังเป็นธุรกรรมจริง
 
-รันในโฟลเดอร์ `contracts` ขณะที่ chain ยังเปิดอยู่ (เซ็นด้วยบัญชี deployer ของ Hardhat)
+## 4. Steward (ปิดฤดูกาล / ตรวจผล) ผ่าน Remix
 
-| คำสั่ง | ทำอะไร |
+ใช้กระเป๋าเดียวกับที่ deploy (owner) ใน Remix แท็บ Deploy & Run → **At Address** ใส่ address ของ contract แล้วเรียก:
+
+| ฟังก์ชัน | ทำอะไร |
 |---|---|
-| `npm run steward` | ดูฤดูกาล กองรางวัล และ top 3 |
-| `STEWARD=end npm run steward` | ปิดฤดูกาล top 3 กด **Claim** ที่หน้า Results ได้ |
-| `STEWARD=void PLAYER=0x… ROUND=3 npm run steward` | ยกเลิกผลเรซที่ตรวจไม่ผ่าน |
-| `STEWARD=sponsor ETH=0.5 npm run steward` | เติมกองรางวัล |
+| `seasonInfo(address)` / `topThree(season)` | ดูกองรางวัลและอันดับ (อ่านอย่างเดียว ไม่เสีย gas) |
+| `voidRace(player, round)` | ยกเลิกผลเรซที่ Verify race ไม่ผ่าน |
+| `endSeason()` | ปิดฤดูกาล top 3 กด **Claim** ที่หน้า Results ได้ |
+| `sponsor()` + VALUE | เติมกองรางวัล |
+| `withdraw()` | owner ถอนส่วน 70% ของ ETH ที่แลกเหรียญ (แตะกองรางวัลไม่ได้) |
 
 ## ทดสอบ
 
 ```bash
-cd contracts && npm test     # contract 12 ข้อ
+cd contracts && npm install && npm test            # contract 12 ข้อ
 ```
 
 ```bash
-cd webapp && npm test        # simulator 9 ข้อ
+cd contracts && npx hardhat run scripts/gas-report.js   # gas ที่แต่ละฟังก์ชันใช้
 ```
+
+```bash
+cd webapp && npm test                                # simulator + error handling 15 ข้อ
+```
+
+## ความปลอดภัย
+
+ดู [SECURITY.md](SECURITY.md) มีการวิเคราะห์ช่องโหว่ของ contract นี้พร้อมบรรทัดโค้ดที่ป้องกัน และเปรียบเทียบ L1 กับ L2 ด้วยค่า gas ที่วัดจริง
 
 ## ปัญหาที่เจอบ่อย
 
 | อาการ | วิธีแก้ |
 |---|---|
-| ปิด chain แล้วเปิดใหม่ เกมหา NFT ไม่เจอ | chain เริ่มจากศูนย์ทุกครั้ง ให้รัน `npm run deploy:local` ใหม่ |
-| MetaMask ขึ้น `nonce too high` หรือธุรกรรมค้าง | MetaMask → Settings → Advanced → **Clear activity tab data** |
-| กด +10 test ETH แล้วขึ้นว่า chain ไม่ทำงาน | ยังไม่ได้รัน `npm run chain` หรือปิดไปแล้ว |
-| "The contract at CONTRACT_ADDRESS doesn't match this game" | ยังไม่ได้ deploy ตามขั้นที่ 2 |
+| Remix deploy ไม่ผ่าน "contract code size exceeds 24576 bytes" | ยังไม่ได้เปิด optimization (ขั้นที่ 1 ข้อ 2) |
+| "No contract address yet" | ยังไม่ได้ใส่ address ใน `webapp/src/chain/sepolia-deployment.json` |
+| "Not enough Sepolia ETH to pay for this and its gas fee" | ขอ ETH เพิ่มจาก Sepolia faucet |
+| "You cancelled the transaction in MetaMask" | กด Reject ใน MetaMask ไป ไม่มีอะไรถูกส่ง กดใหม่ได้ |
+| ธุรกรรมค้างนาน | Sepolia ช้าบางช่วง รอสักครู่ หรือดูสถานะบน Etherscan |
 
-## ใช้ Sepolia แทน (ไม่บังคับ)
-
-Deploy `contracts/contracts/PitWallNFT.sol` บน Sepolia (Remix ใช้ EVM **cancun**) แล้วใส่ address ในรายการ `sepolia` ของ `webapp/src/chain/config.ts` จากนั้นรัน
+## รันบน chain ในเครื่องแทน (ไม่บังคับ)
 
 ```bash
-cd webapp && VITE_CHAIN=sepolia npm run dev
+cd webapp && VITE_CHAIN=local npm run dev
 ```
+
+ต้องเปิด `npm run chain` และ `npm run deploy:local` ในโฟลเดอร์ `contracts` ก่อน (ดูรายละเอียดใน branch `local-hardhat`)
+
+## การใช้ AI
+
+โปรเจกต์นี้ใช้ Claude (Anthropic) ช่วยพัฒนา:
+- เขียนและปรับโค้ดเกม ตัวจำลองเรซ และ smart contract
+- เขียนชุดทดสอบ
+- วิเคราะห์ความปลอดภัย
+- จัดทำเอกสาร
+
+สมาชิกตรวจ ทดสอบ และอธิบายโค้ดทุกส่วนที่ส่งได้
 
 ## โครงสร้าง
 
-| โฟลเดอร์ | มีอะไร |
+| โฟลเดอร์ / ไฟล์ | มีอะไร |
 |---|---|
-| `contracts/` | Smart contract `PitWallNFT.sol`, เทสต์ Hardhat, สคริปต์ deploy / steward / metadata ([รายละเอียด](contracts/README.md)) |
+| `contracts/contracts/PitWallNFT.sol` | Smart contract ต้นฉบับ |
+| `contracts/remix/PitWallNFT.sol` | ไฟล์เดียวสำหรับ deploy บน Remix และ verify บน Etherscan |
+| `contracts/test/` | เทสต์ Hardhat |
+| `contracts/scripts/` | deploy (local), steward (local), gas-report, build-metadata |
 | `webapp/` | เกม: Vite + React + TypeScript, ฉากแข่งวาดด้วย Canvas |
-| `webapp/src/chain/` | เชื่อม MetaMask และ contract ด้วย Ethers.js |
-| `OVERVIEW.md` | สรุประบบเกมทั้งหมด และ chain / NFT ทุกจุด |
+| `webapp/src/chain/` | เชื่อม MetaMask และ contract ด้วย Ethers.js, ข้อความ error ของธุรกรรม |
+| `OVERVIEW.md` | สรุประบบเกม และ chain / NFT ทุกจุด |
+| `SECURITY.md` | วิเคราะห์ความปลอดภัย + L1 กับ L2 |
+| `SLIDES_PLAN.md` | แผนสไลด์นำเสนอ |

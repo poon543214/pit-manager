@@ -77,6 +77,7 @@ export function ExchangeDialog({ open, onClose }: { open: boolean; onClose: () =
         <dd>{valid ? (state.coins + coins).toLocaleString() : '–'}</dd>
       </dl>
       {short && <p className="exchange-note">Not enough ETH in this wallet for {coins.toLocaleString()} coins.</p>}
+      {!IS_LOCAL && <p className="exchange-hint">Need test ETH? Get free {CHAIN_NAME} ETH from a {CHAIN_NAME} faucet. Each exchange also pays a small gas fee.</p>}
 
       <div className="dialog-actions">
         {IS_LOCAL && (

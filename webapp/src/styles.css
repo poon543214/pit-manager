@@ -836,3 +836,5 @@ button:disabled.driver-row, button:disabled.chip, .cb-callout:disabled { opacity
 .sp-stats dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
 .sp-foot { display: flex; justify-content: flex-end; align-items: flex-start; }
 .sp-foot .owned { padding: 0; }
+.exchange-hint { margin: 10px 0 0; font-size: 13px; color: rgba(255,255,255,.7); }
+.home-wallet-actions a { font-size: 12px; font-weight: 700; color: var(--white); text-decoration: underline; text-align: center; }

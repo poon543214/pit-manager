@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ExchangeDialog } from '../components/ExchangeDialog';
+import { CONTRACT_ADDRESS, explorerLink } from '../chain/config';
 import { Button } from '../components/Button';
 import { WeatherIcon } from '../components/PixelIcon';
 import { DriverImg } from '../components/Sprites';
@@ -76,6 +77,11 @@ export function Home() {
             <button type="button" onClick={() => attempt(() => service.disconnectWallet())}>
               Disconnect
             </button>
+            {explorerLink('address', CONTRACT_ADDRESS) && (
+              <a href={explorerLink('address', CONTRACT_ADDRESS)!} target="_blank" rel="noreferrer">
+                Contract ↗
+              </a>
+            )}
           </span>
         </div>
       ) : (

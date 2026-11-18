@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { friendlyError } from './chain/errors';
 import type { GameService } from './services/gameService';
 import type { PracticeReport } from './sim/practice';
 import type { Loadout, PlayerState, RaceResult } from './shared/types';
@@ -104,7 +105,8 @@ export function GameProvider({ service, children }: { service: GameService; chil
 
   useEffect(() => {
     if (!toast) return;
-    const id = setTimeout(() => setToast(null), 2600);
+    // longer messages (errors) stay up long enough to read
+    const id = setTimeout(() => setToast(null), toast.length > 60 ? 5200 : 2600);
     return () => clearTimeout(id);
   }, [toast]);
 
@@ -130,7 +132,7 @@ export function GameProvider({ service, children }: { service: GameService; chil
           if (gate) setPage(gate);
           setGate(null);
         } catch (e) {
-          setToast(e instanceof Error ? e.message : String(e));
+          setToast(friendlyError(e));
         }
       },
       lastRace,
@@ -166,7 +168,7 @@ export function GameProvider({ service, children }: { service: GameService; chil
         try {
           return await fn();
         } catch (e) {
-          setToast(e instanceof Error ? e.message : String(e));
+          setToast(friendlyError(e));
           return undefined;
         }
       },
