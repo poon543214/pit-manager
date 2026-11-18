@@ -15,10 +15,14 @@
 
 | รายการ | ค่า |
 |---|---|
-| Contract address | `ใส่หลัง deploy` |
-| Etherscan | `https://sepolia.etherscan.io/address/<address>` |
-| Deploy tx | `ใส่หลัง deploy` |
-| ตัวอย่างธุรกรรมจากเดโม (buyCoins / buyDriver / submitRace / claim) | `ใส่หลังเล่นจริง` |
+| Contract address | [`0x3EA5ca51341aBdcb50D0A0BD1cCC3C728308f0aD`](https://sepolia.etherscan.io/address/0x3EA5ca51341aBdcb50D0A0BD1cCC3C728308f0aD#code) (source verified บน Etherscan) |
+| Compiler | Solidity v0.8.24, optimization 200 runs |
+| Deploy tx | [`0x7b58b497…4cb9`](https://sepolia.etherscan.io/tx/0x7b58b497438c5207a2cf4520b54d1b03dff15b903cbf4778c6317b92b1dc4cb9) |
+| `buyCoins` (0.01 ETH → 1,000 coins) | [`0xf9ad9b7b…b10f`](https://sepolia.etherscan.io/tx/0xf9ad9b7b581d9562546c53cb98d0a18793c7105a75f66a0eaa2d6aef7234b10f) |
+| `buyDriver` | [`0x09b49805…01a8`](https://sepolia.etherscan.io/tx/0x09b49805fdff5296cb83f5141640051b59d279a057b2c8da3dea5aaa69fb01a8) |
+| `buyPart` | [`0xe9adf249…fae0`](https://sepolia.etherscan.io/tx/0xe9adf249ca8bd4499a9cbb9be7a49d33fe0c408b7d2dd9e8bf6478b04827fae0) |
+| `submitRace` | [`0x83410d22…13a5`](https://sepolia.etherscan.io/tx/0x83410d2206c0f1e1205d2c7d1938c0380e2f08425f2a597241e218aac14713a5) |
+| `endSeason` / `claim` | `ใส่หลังปิดฤดูกาลและเคลมจริง` |
 
 ## สิ่งที่ต้องมี
 
@@ -134,8 +138,7 @@ cd webapp && VITE_CHAIN=local npm run dev
 ## การใช้ AI
 
 โปรเจกต์นี้ใช้ Claude (Anthropic) ช่วยพัฒนา:
-- เขียนและปรับโค้ดเกม ตัวจำลองเรซ และ smart contract
-- เขียนชุดทดสอบ
+- เขียนตัวจำลองเรซ และการคิดค่าความเร็วจากทุกส่วนมารวมกัน
 - วิเคราะห์ความปลอดภัย
 - จัดทำเอกสาร
 
