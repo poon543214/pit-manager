@@ -1,6 +1,8 @@
 const hre = require('hardhat');
 
-// Gas each main action uses, measured on Hardhat's in-process chain (same EVM rules as Sepolia / mainnet).
+// Gas each main action uses, measured on Hardhat's in-process chain. Hardhat prices gas with older EVM rules than
+// Sepolia today, so storage-heavy actions cost several times more on Sepolia: quote Sepolia receipts (SECURITY.md)
+// as the real cost and use these numbers only to compare functions with each other.
 // Run: npx hardhat run scripts/gas-report.js
 async function main() {
   const { ethers } = hre;

@@ -52,7 +52,11 @@
 | `buyDriver` | [`0x09b49805…01a8`](https://sepolia.etherscan.io/tx/0x09b49805fdff5296cb83f5141640051b59d279a057b2c8da3dea5aaa69fb01a8) |
 | `buyPart` | [`0xe9adf249…fae0`](https://sepolia.etherscan.io/tx/0xe9adf249ca8bd4499a9cbb9be7a49d33fe0c408b7d2dd9e8bf6478b04827fae0) |
 | `submitRace` | [`0x83410d22…13a5`](https://sepolia.etherscan.io/tx/0x83410d2206c0f1e1205d2c7d1938c0380e2f08425f2a597241e218aac14713a5) |
-| `endSeason` / `claim` | `ใส่หลังปิดฤดูกาลและเคลมจริง` |
+| `endSeason` | [`0x30e801b6…6d9c`](https://sepolia.etherscan.io/tx/0x30e801b617198fd8aee0b6a0a71df3cb25bc3ce7d3576286bfc95e438d056d9c) |
+| `claim` (ได้รับ 0.0015 ETH) | [`0xcc1e3f91…feb5`](https://sepolia.etherscan.io/tx/0xcc1e3f91ba822d4b6e562dee615bf33a97731b3d85220efffaeddb7283a5feb5) |
+
+> ⚠️ **contract ที่ address นี้มีบั๊ก:** ส่งผลเรซเดิมซ้ำในฤดูกาลใหม่ได้ ดูหลักฐาน [submitRace ครั้งที่ 2](https://sepolia.etherscan.io/tx/0x5001e7560c30c6ebde1b85c3905efa834f3bb5f7fcc388c282be1c780c8ea958) ซึ่งใช้ R5 ผลเดิม
+> แก้แล้วในโค้ด (`lastPostedRound`) รายละเอียดใน [SECURITY.md](SECURITY.md) ข้อ 3 ต้อง deploy `contracts/remix/PitWallNFT.sol` ใหม่แล้วอัปเดต address ในตารางนี้
 
 ## สิ่งที่ต้องมี
 

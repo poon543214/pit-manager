@@ -88,6 +88,9 @@ contract PitWallNFT is ERC721Enumerable {
     mapping(uint256 => address[]) private _players; // season => everyone who posted a race
     mapping(uint256 => mapping(address => uint256)) public seasonPoints;
     mapping(uint256 => mapping(address => uint256)) public lastRound;
+    /// Highest game round a player has ever posted, across all seasons. Game rounds keep counting up between
+    /// seasons, so a race posted once can never be posted again (not even after endSeason starts a new season).
+    mapping(address => uint256) public lastPostedRound;
     mapping(uint256 => mapping(address => uint256)) public racesPosted; // season => player => races posted
     mapping(uint256 => mapping(address => mapping(uint256 => uint256))) public pointsAt; // season => player => round => points
     mapping(uint256 => mapping(address => mapping(uint256 => bytes32))) public recordAt;
@@ -202,11 +205,12 @@ contract PitWallNFT is ERC721Enumerable {
     function submitRace(uint256 round, uint256 points, bytes32 record) external {
         require(driversHeld[msg.sender] > 0, "hold a driver NFT to race");
         require(points <= MAX_POINTS, "too many points");
-        require(round > lastRound[season][msg.sender], "round already posted");
+        require(round > lastPostedRound[msg.sender], "round already posted");
         require(racesPosted[season][msg.sender] < RACES_PER_SEASON, "season race limit reached");
         racesPosted[season][msg.sender] += 1;
         if (lastRound[season][msg.sender] == 0) _players[season].push(msg.sender);
         lastRound[season][msg.sender] = round;
+        lastPostedRound[msg.sender] = round;
         pointsAt[season][msg.sender][round] = points;
         recordAt[season][msg.sender][round] = record;
         seasonPoints[season][msg.sender] += points;
@@ -284,7 +288,8 @@ contract PitWallNFT is ERC721Enumerable {
         )
     {
         (top, topPoints) = topThree(season);
-        return (season, seasonPool, seasonPoints[season][who], lastRound[season][who], claimable[who], top, topPoints);
+        // myLastRound is the all-time last posted round, so the game hides "Post" for any race already on chain
+        return (season, seasonPool, seasonPoints[season][who], lastPostedRound[who], claimable[who], top, topPoints);
     }
 
     function _driverAt(string calldata key) private view returns (uint256) {
